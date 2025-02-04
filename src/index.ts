@@ -8,7 +8,6 @@ import {
 } from "@elizaos/core";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import { createNodePlugin } from "@elizaos/plugin-node";
-import { solanaPlugin } from "@elizaos/plugin-solana";
 import fs from "fs";
 import net from "net";
 import path from "path";
@@ -23,6 +22,7 @@ import {
   parseArguments,
 } from "./config/index.ts";
 import { initializeDatabase } from "./database/index.ts";
+import suiPlugin from "./plugin-sui/index.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,6 +32,10 @@ export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
     Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
   return new Promise((resolve) => setTimeout(resolve, waitTime));
 };
+
+function getSecret(character: Character, secret: string) {
+  return character.settings?.secrets?.[secret] || process.env[secret];
+}
 
 let nodePlugin: any | undefined;
 
@@ -44,7 +48,7 @@ export function createAgent(
   elizaLogger.success(
     elizaLogger.successesTitle,
     "Creating runtime for character",
-    character.name,
+    character.name
   );
 
   nodePlugin ??= createNodePlugin();
@@ -58,7 +62,7 @@ export function createAgent(
     plugins: [
       bootstrapPlugin,
       nodePlugin,
-      character.settings?.secrets?.WALLET_PUBLIC_KEY ? solanaPlugin : null,
+      getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
     ].filter(Boolean),
     providers: [],
     actions: [],
@@ -100,7 +104,7 @@ async function startAgent(character: Character, directClient: DirectClient) {
   } catch (error) {
     elizaLogger.error(
       `Error starting agent for character ${character.name}:`,
-      error,
+      error
     );
     console.error(error);
     throw error;
@@ -165,7 +169,7 @@ const startAgents = async () => {
   }
 
   const isDaemonProcess = process.env.DAEMON_PROCESS === "true";
-  if(!isDaemonProcess) {
+  if (!isDaemonProcess) {
     elizaLogger.log("Chat started. Type 'exit' to quit.");
     const chat = startChat(characters);
     chat();

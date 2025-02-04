@@ -1,5 +1,12 @@
 # Eliza
 
+Fix better-sqlite3 build error
+```
+cd node_modules/better-sqlite3
+npm run build-release
+cd ..
+```
+
 ## Edit the character files
 
 Open `src/character.ts` to modify the default character. Uncomment and edit.

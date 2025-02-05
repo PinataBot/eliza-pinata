@@ -22,7 +22,7 @@ import {
   parseArguments,
 } from "./config/index.ts";
 import { initializeDatabase } from "./database/index.ts";
-import suiPlugin from "./plugin-sui/index.ts";
+import suiPlugin from "./packages/plugin-sui/index.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

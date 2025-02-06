@@ -1,19 +1,20 @@
 import {
-    elizaLogger,
+    elizaLogger, embed, getEmbeddingZeroVector,
     IAgentRuntime,
     ICacheManager,
     Memory,
     Provider,
-    State,
+    State, UUID,
 } from "@elizaos/core";
+import {v4 as uuid} from "uuid";
 
-import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
+import {getFullnodeUrl, SuiClient} from "@mysten/sui/client";
 
-import { MIST_PER_SUI } from "@mysten/sui/utils";
+import {MIST_PER_SUI} from "@mysten/sui/utils";
 import BigNumber from "bignumber.js";
 import NodeCache from "node-cache";
 import * as path from "path";
-import { parseAccount, SuiNetwork } from "../utils.ts";
+import {parseAccount, SuiNetwork} from "../utils.ts";
 import axios from "axios";
 // Provider configuration
 const PROVIDER_CONFIG = {
@@ -225,6 +226,20 @@ const walletProvider: Provider = {
                 suiAccount.toSuiAddress(),
                 runtime.cacheManager
             );
+
+            // console.log(_message)
+            // const mem: Memory = {
+            //     id: uuid() as UUID,
+            //     ..._message,
+            //     content: {
+            //         text: "test!!!!!"
+            //     },
+            // }
+            // await runtime.knowledgeManager.addEmbeddingToMemory(
+            //     mem
+            // )
+            // await runtime.knowledgeManager.createMemory(mem)
+
             return await provider.getFormattedPortfolio(runtime);
         } catch (error) {
             console.error("Error in wallet provider:", error);
@@ -234,4 +249,4 @@ const walletProvider: Provider = {
 };
 
 // Module exports
-export { walletProvider };
+export {walletProvider};

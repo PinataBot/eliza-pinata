@@ -3,25 +3,41 @@ import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
 import { elizaLogger } from "@elizaos/core";
 import Database from "better-sqlite3";
 import path from "path";
+import { SupabaseDatabaseAdapter } from "../packages/adapter-supabase/src/index.ts";
 
 export function initializeDatabase(dataDir: string) {
-  if (process.env.POSTGRES_URL) {
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+    elizaLogger.info("Initializing Supabase connection...");
+    const db = new SupabaseDatabaseAdapter(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_ANON_KEY
+    );
+
+    // Test the connection
+    db.init()
+      .then(() => {
+        elizaLogger.success("Successfully connected to Supabase database");
+      })
+      .catch((error) => {
+        elizaLogger.error("Failed to connect to Supabase:", error);
+      });
+
+    return db;
+  } else if (process.env.POSTGRES_URL) {
     elizaLogger.info("Initializing PostgreSQL connection...");
     const db = new PostgresDatabaseAdapter({
-        connectionString: process.env.POSTGRES_URL,
-        parseInputs: true,
+      connectionString: process.env.POSTGRES_URL,
+      parseInputs: true,
     });
 
     // Test the connection
     db.init()
-        .then(() => {
-            elizaLogger.success(
-                "Successfully connected to PostgreSQL database"
-            );
-        })
-        .catch((error) => {
-            elizaLogger.error("Failed to connect to PostgreSQL:", error);
-        });
+      .then(() => {
+        elizaLogger.success("Successfully connected to PostgreSQL database");
+      })
+      .catch((error) => {
+        elizaLogger.error("Failed to connect to PostgreSQL:", error);
+      });
 
     return db;
   } else {

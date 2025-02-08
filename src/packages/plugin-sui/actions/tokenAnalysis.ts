@@ -12,7 +12,8 @@ import {
   Content,
 } from "@elizaos/core";
 import { z } from "zod";
-import { fetchTokenData } from "../../utils/fetchTokensData.ts";
+import { fetchTokenData } from "../utils/fetchTokensData.ts";
+import {putBlob} from "../utils/walrus.ts";
 
 interface CoinTypeTypes extends Content {
   coinType: any;
@@ -33,28 +34,6 @@ Example output:
   "coinType": "0x2::sui::SUI"
 }
 `;
-
-async function putBlob(data: string) {
-  try {
-    const PUBLISHER_URL = "https://publisher.walrus-testnet.walrus.space";
-    const response = await fetch(`${PUBLISHER_URL}/v1/blobs`, {
-      method: "PUT",
-      body: data,
-      headers: {
-        "Content-Type": "text/plain", // Adjust the content type if needed
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.text(); // or response.json() if the response is JSON
-    console.log("Response:", result);
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
 
 // Compose the prompt to analyze the token data
 const analysisPrompt = (

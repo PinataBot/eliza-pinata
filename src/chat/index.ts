@@ -1,7 +1,6 @@
 import { settings } from "@elizaos/core";
 import readline from "readline";
-import { loadWhitelistTokens } from "../packages/utils/loadWhitelistTokens.ts";
-import { fetchTokenData } from "../packages/utils/fetchTokensData.ts";
+import {loadWhitelistTokens} from "../packages/plugin-sui/utils/loadWhitelistTokens.ts";
 
 const rl = readline.createInterface({
   input: process.stdin,

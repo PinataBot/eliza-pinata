@@ -19,8 +19,8 @@ import NodeCache from "node-cache";
 import * as path from "path";
 import { parseAccount, SuiNetwork } from "../utils.ts";
 import axios from "axios";
-import { loadWhitelistTokens } from "../../utils/loadWhitelistTokens.ts";
-import { fetchTokenData } from "../../utils/fetchTokensData.ts";
+import { loadWhitelistTokens } from "../utils/loadWhitelistTokens.ts";
+import { fetchTokenData } from "../utils/fetchTokensData.ts";
 // Provider configuration
 const PROVIDER_CONFIG = {
   MAX_RETRIES: 3,

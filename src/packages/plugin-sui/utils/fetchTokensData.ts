@@ -1,4 +1,4 @@
-import { CoinInfo, CoinsInfo } from "../plugin-sui/types";
+import { CoinInfo, CoinsInfo } from "../types";
 
 export async function fetchTokenData(coinType: string): Promise<CoinsInfo> {
   try {

@@ -16,7 +16,7 @@ import { elizaLogger } from "@elizaos/core";
  */
 export function loadWhitelistTokens(): string[] {
   try {
-    const dataDir = path.join(process.cwd(), "src/packages/utils");
+    const dataDir = path.join(process.cwd(), "src/packages/plugin-sui/utils");
     const filePath = path.join(dataDir, "whitelist_cointypes.json");
 
     if (!fs.existsSync(dataDir)) {

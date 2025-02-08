@@ -14,6 +14,22 @@ export async function fetchTokenData(coinType: string): Promise<CoinsInfo> {
     }
 
     const data = await response.json();
+
+    // Iterate over the tokens data and delete coinMetadata.iconUrl for each token.
+    if (Array.isArray(data)) {
+      data.forEach((token: any) => {
+        if (token.coinMetadata && token.coinMetadata.iconUrl) {
+          delete token.coinMetadata.iconUrl;
+        }
+      });
+    } else if (data && typeof data === "object") {
+      Object.values(data).forEach((token: any) => {
+        if (token && token.coinMetadata && token.coinMetadata.iconUrl) {
+          delete token.coinMetadata.iconUrl;
+        }
+      });
+    }
+
     return data;
   } catch (error) {
     console.error(`Attempt failed:`, error);

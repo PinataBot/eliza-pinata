@@ -13,26 +13,29 @@ import {
 } from "@elizaos/core";
 import { z } from "zod";
 import { fetchTokenData } from "../utils/fetchTokensData.ts";
-import {putBlob} from "../utils/walrus.ts";
+import { putBlob } from "../utils/walrus.ts";
 
 interface CoinTypeTypes extends Content {
   coinType: any;
 }
 
 // Compose the prompt to analyze the token data
-const coinTypePrompt = `Analyze the last message and extract coin type from the text.
+const coinTypePrompt = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
+
+Example response:
+\`\`\`json
+{
+    "coinType": "0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD"
+}
+\`\`\`
+
 {{recentMessages}}
 
-Given the recent messages, extract the following information about the requested analysis:
+Given the recent messages, extract the following information about the requested coin type analysis:
 - Coin type
 
-Example input:
-Analyze the token 0x2::sui::SUI
 
-Example output:
-{
-  "coinType": "0x2::sui::SUI"
-}
+Respond with a JSON markdown block containing only the extracted value.
 `;
 
 // Compose the prompt to analyze the token data
@@ -91,11 +94,14 @@ export default {
         runtime,
         context: tokenInfoContext,
         schema: coinTypeSchema,
-        modelClass: ModelClass.SMALL,
+        modelClass: ModelClass.LARGE,
       });
 
       const coinTypeContent = content.object as CoinTypeTypes;
       console.log("Coin Type", coinTypeContent.coinType);
+      if (!coinTypeContent.coinType) {
+        throw new Error("Can't fetch coin type");
+      }
       // TODO:: check if the coinType is valid
       const tokenData = await fetchTokenData(coinTypeContent.coinType);
       console.log("Token Data", tokenData);

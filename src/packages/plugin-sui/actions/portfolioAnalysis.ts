@@ -15,6 +15,7 @@ import {
 } from "@elizaos/core";
 import { z } from "zod";
 import { SuiService } from "../services/sui";
+import { fetchTokenData } from "../../utils/fetchTokensData";
 
 interface PorfolioTypes extends Content {
   coinType: any;
@@ -104,28 +105,7 @@ export default {
       const portfolioContent = content.object as PorfolioTypes;
       console.log("Portfolio Cointype", portfolioContent.coinType);
 
-      async function fetchTokenInfo(coinType: string) {
-        try {
-          const response = await fetch(
-            `https://api.insidex.trade/external/coin-details?coins=${coinType}`
-          );
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(
-              `HTTP error! status: ${response.status}, message: ${errorText}`
-            );
-          }
-
-          const data = await response.json();
-          return data;
-        } catch (error) {
-          console.error(`Attempt failed:`, error);
-          return null;
-        }
-      }
-
-      const tokenInfo = await fetchTokenInfo(portfolioContent.coinType);
+      const tokenInfo = await fetchTokenData(portfolioContent.coinType);
 
       const analysisContext = composeContext({
         state,

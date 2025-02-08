@@ -12,6 +12,7 @@ import * as path from "path";
 import axios from "axios";
 import { CoinsInfo } from "../types";
 import { loadWhitelistTokens } from "../../utils/loadWhitelistTokens.ts";
+import { fetchTokenData } from "../../utils/fetchTokensData.ts";
 // Provider configuration
 const PROVIDER_CONFIG = {
   MAX_RETRIES: 3,
@@ -71,14 +72,7 @@ export class CoinsProvider {
     const coinTypes = loadWhitelistTokens();
     for (let i = 0; i < PROVIDER_CONFIG.MAX_RETRIES; i++) {
       try {
-        const url = `https://api.insidex.trade/external/coin-details?coins=${coinTypes.join(
-          ","
-        )}`;
-        // uncomment for see full url in console
-        elizaLogger.info(`Fetching coins info ${url}`);
-        const response = await axios.get(url);
-
-        const coinsInfo = response.data;
+        const coinsInfo = await fetchTokenData(coinTypes.join(","));
         coinsInfo.forEach((coin) => {
           if (coin?.coinMetadata?.iconUrl) {
             coin.coinMetadata.iconUrl = "";

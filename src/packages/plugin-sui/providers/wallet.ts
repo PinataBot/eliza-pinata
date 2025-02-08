@@ -20,6 +20,7 @@ import * as path from "path";
 import { parseAccount, SuiNetwork } from "../utils.ts";
 import axios from "axios";
 import { loadWhitelistTokens } from "../../utils/loadWhitelistTokens.ts";
+import { fetchTokenData } from "../../utils/fetchTokensData.ts";
 // Provider configuration
 const PROVIDER_CONFIG = {
   MAX_RETRIES: 3,
@@ -142,11 +143,7 @@ export class WalletProvider {
         }
         // need to figureout how to fetch sui price with insidex
         const coinTypes = await this.loadingWhitelistTokens();
-        const url = `https://api.insidex.trade/external/coin-details?coins=${coinTypes.join(
-          ","
-        )}`;
-        elizaLogger.info(`Fetching SUI price from ${url}`);
-        const response = await axios.get(url);
+        const response = await fetchTokenData(coinTypes.join(","));
         console.log("Response:", response.data);
         return response.data;
       } catch (error) {
@@ -251,11 +248,10 @@ export class WalletProvider {
         const coinTypesQuery = filteredTokens
           .map((token) => token.coinType)
           .join(",");
-        const url = `https://api.insidex.trade/external/coin-details?coins=${coinTypesQuery}`;
-        elizaLogger.info(`Fetching token prices from ${url}`);
 
-        // Fetch prices for the filtered tokens from the insidex API.
-        const response = await axios.get(url);
+        const response = await fetchTokenData(coinTypesQuery);
+        //elizaLogger.info(`Fetching token prices from ${response}`);
+
         // Map the response to an array of pricing information.
         // Adjust the mapping based on the actual structure returned by the API.
         tokensPrices = response.data

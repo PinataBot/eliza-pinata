@@ -20,9 +20,9 @@ export async function putBlob(data: string): Promise<string> {
         const result: WalrusPutResponse = await response.json(); // or response.json() if the response is JSON
         console.log("Response:", result);
 
-        if ("newlyCreated" in result && result.newlyCreated?.blobObject?.blobId) {
+        if (result.newlyCreated) {
             return result.newlyCreated.blobObject.blobId;
-        } else if ("alreadyCertified" in result && result?.alreadyCertified?.blobId) {
+        } else if (result.alreadyCertified) {
             return result.alreadyCertified.blobId;
         } else {
             console.error('Unexpected response structure:', result);

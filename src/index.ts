@@ -178,11 +178,7 @@ const startAgents = async () => {
     }
 };
 
-// startAgents().catch((error) => {
-//   elizaLogger.error("Unhandled error in startAgents:", error);
-//   process.exit(1);
-// });
-
-putBlob("Hello World22").then((id) => {
-    console.log("Blob id:", id);
-})
+startAgents().catch((error) => {
+  elizaLogger.error("Unhandled error in startAgents:", error);
+  process.exit(1);
+});

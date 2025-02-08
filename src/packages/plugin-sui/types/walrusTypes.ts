@@ -1,6 +1,7 @@
-export type WalrusPutResponse =
-    | { newlyCreated: NewlyCreated }
-    | { alreadyCertified: AlreadyCertified };
+export type WalrusPutResponse = {
+    newlyCreated: NewlyCreated | null;
+    alreadyCertified: AlreadyCertified | null;
+};
 
 export interface NewlyCreated {
     blobObject: {

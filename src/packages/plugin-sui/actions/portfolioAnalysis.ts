@@ -26,22 +26,7 @@ function isPorfolioTypes(content: Content): content is PorfolioTypes {
 }
 
 // Compose the prompt to analyze the token data
-const portfolioAnalysisPrompt = `Analyze the following token portfolio and provide a trading recommendation. Use null for any values that cannot be determined.
-
-Return the response as a JSON object with the following structure:
-Example response:
-\`\`\`json
-{
-  "tokenName": string,
-  "coinType": string,
-  "recommendation": "BUY" | "SELL" | "HOLD",
-  "confidence": number (0-100),
-  "reasoning": string,
-  "risks": string[],
-  "opportunities": string[]
-}
-\`\`\`
-
+const portfolioAnalysisPrompt = `Analyze the following text and extract token or tokens from the text.
 {{recentMessages}}
 `;
 

@@ -13,7 +13,7 @@ import { v4 as uuid } from "uuid";
 
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 
-import { MIST_PER_SUI } from "@mysten/sui/utils";
+import { MIST_PER_SUI, SUI_TYPE_ARG } from "@mysten/sui/utils";
 import BigNumber from "bignumber.js";
 import NodeCache from "node-cache";
 import * as path from "path";
@@ -29,10 +29,22 @@ const PROVIDER_CONFIG = {
 interface WalletPortfolio {
   totalUsd: string;
   totalSui: string;
+  tokens: Array<{
+    usd: string;
+    symbol: string;
+    coinType: string;
+    totalBalance: string;
+  }>;
 }
 
 interface Prices {
-  sui: { usd: string };
+  sui: { usd: string; symbol: string; coinType: string };
+  tokens?: Array<{
+    usd: string;
+    symbol: string;
+    coinType: string;
+    totalBalance: string;
+  }>;
 }
 
 const cacheTimeSeconds = 30;
@@ -88,11 +100,46 @@ export class WalletProvider {
     await this.writeToCache(cacheKey, data);
   }
 
-  private async fetchPricesWithRetry() {
+  // This function retrieves all token balances, removes any token with a totalBalance of "0",
+  // excludes the SUI token, and only returns tokens that are in the whitelist.
+  private async getFilteredWalletTokens(): Promise<
+    { coinType: string; totalBalance: string }[]
+  > {
+    // Retrieve all wallet token balances
+    const allTokens = await this.suiClient.getAllBalances({
+      owner: this.address,
+    });
+
+    // Load the whitelist tokens
+    const whitelist = await this.loadingWhitelistTokens();
+
+    // Filter tokens: remove tokens with zero balance, exclude SUI type,
+    // and ensure the token is present in the whitelist.
+    return allTokens
+      .filter((token: any) => {
+        if (token.totalBalance === "0") return false; // Skip if balance is zero.
+        if (token.coinType === "0x2::sui::SUI") return false; // Skip SUI tokens.
+        return whitelist.includes(token.coinType); // Only include if whitelisted.
+      })
+      .map((token: any) => ({
+        coinType: token.coinType,
+        totalBalance: token.totalBalance,
+      }));
+  }
+
+  private async fetchPortfolioPricesWithRetry(isSui: boolean) {
     let lastError: Error;
 
     for (let i = 0; i < PROVIDER_CONFIG.MAX_RETRIES; i++) {
       try {
+        if (isSui) {
+          const cetusSuiUsdcPoolAddr =
+            "0x51e883ba7c0b566a26cbc8a94cd33eb0abd418a77cc1e60ad22fd9b1f29cd2ab";
+          const url = `https://api.dexscreener.com/latest/dex/pairs/sui/${cetusSuiUsdcPoolAddr}`;
+          elizaLogger.info(`Fetching SUI price from ${url}`);
+          const response = await axios.get(url);
+          return response.data;
+        }
         // need to figureout how to fetch sui price with insidex
         const coinTypes = await this.loadingWhitelistTokens();
         const url = `https://api.insidex.trade/external/coin-details?coins=${coinTypes.join(
@@ -128,10 +175,6 @@ export class WalletProvider {
       }
       console.log("Cache miss for fetchPortfolioValue");
 
-      const prices = await this.fetchPrices().catch((error) => {
-        console.error("Error fetching SUI price:", error);
-        throw error;
-      });
       const suiAmountOnChain = await this.suiClient
         .getBalance({
           owner: this.address,
@@ -143,14 +186,20 @@ export class WalletProvider {
 
       const suiAmount =
         Number.parseInt(suiAmountOnChain.totalBalance) / Number(MIST_PER_SUI);
+
+      const prices = await this.fetchPrices().catch((error) => {
+        console.error("Error fetching SUI price:", error);
+        throw error;
+      });
+
       const totalUsd = new BigNumber(suiAmount).times(prices.sui.usd);
 
       const portfolio = {
         totalUsd: totalUsd.toString(),
         totalSui: suiAmount.toString(),
+        tokens: prices.tokens,
       };
       this.setCachedData(cacheKey, portfolio);
-      console.log("Fetched portfolio:", portfolio);
       return portfolio;
     } catch (error) {
       console.error("Error fetching portfolio:", error);
@@ -173,26 +222,79 @@ export class WalletProvider {
     try {
       const cacheKey = "prices";
       const cachedValue = await this.getCachedData<Prices>(cacheKey);
-      const whitelistTokens = await this.loadingWhitelistTokens();
 
       if (cachedValue) {
         console.log("Cache hit for fetchPrices");
         return cachedValue;
       }
       console.log("Cache miss for fetchPrices");
-      // TODO:
-      // 1. fetch wallet tokens
-      // 2. fetch whitelist tokens
-      // 3. check if wallet tokens are in whitelist
-      // 4. if not, skip loading prices
-      // 5. if yes, fetch prices for whitelist tokens
-      // 6. return prices in the format of Prices interface
-      const suiPriceData = await this.fetchPricesWithRetry().catch((error) => {
-        console.error("Error fetching SUI price:", error);
-        throw error;
-      });
+      // Fetch SUI price using the dexscreener API
+      const suiPriceData = await this.fetchPortfolioPricesWithRetry(true).catch(
+        (error) => {
+          console.error("Error fetching SUI price:", error);
+          throw error;
+        }
+      );
+      const suiUsdPrice = (1 / suiPriceData.pair.priceNative).toString();
+
+      // Get non-SUI tokens from the wallet that are also in the whitelist.
+      const filteredTokens = await this.getFilteredWalletTokens();
+      let tokensPrices: Array<{
+        coinType: string;
+        usd: string;
+        symbol: string;
+        totalBalance: string;
+      }> = [];
+
+      if (filteredTokens.length > 0) {
+        // Create a comma-separated query string from the filtered token coin types.
+        const coinTypesQuery = filteredTokens
+          .map((token) => token.coinType)
+          .join(",");
+        const url = `https://api.insidex.trade/external/coin-details?coins=${coinTypesQuery}`;
+        elizaLogger.info(`Fetching token prices from ${url}`);
+
+        // Fetch prices for the filtered tokens from the insidex API.
+        const response = await axios.get(url);
+        // Map the response to an array of pricing information.
+        // Adjust the mapping based on the actual structure returned by the API.
+        tokensPrices = response.data
+          .map((tokenData: any) => {
+            // Find the matching token from the filtered tokens array
+            const filteredToken = filteredTokens.find(
+              (token) => token.coinType === tokenData.coinMetadata.coinType
+            );
+            if (!filteredToken) return null; // Skip if no matching token is found
+
+            // Get decimals from the token metadata
+            const decimals = tokenData.coinMetadata.decimals;
+            // Compute the factor (10^decimals)
+            const factor = new BigNumber(10).pow(decimals);
+            // Convert the raw balance into a true human-readable balance
+            const trueBalance = new BigNumber(
+              filteredToken.totalBalance
+            ).dividedBy(factor);
+
+            // Use coinPrice from tokenData. If missing, default to 0.
+            const coinPrice = tokenData.coinPrice
+              ? new BigNumber(tokenData.coinPrice)
+              : new BigNumber(0);
+            // Compute the total USD value for this token by multiplying the true balance by the coinPrice
+            const totalUsdValue = trueBalance.multipliedBy(coinPrice);
+
+            return {
+              symbol: tokenData.coinMetadata.symbol,
+              coinType: tokenData.coinMetadata.coinType,
+              usd: totalUsdValue.toString(), // The USD value as a string
+              totalBalance: trueBalance.toString(),
+            };
+          })
+          .filter((token) => token !== null); // Filter out any null entries
+      }
+      //   console.log("---------->tokensPrices", tokensPrices);
       const prices: Prices = {
-        sui: { usd: (1 / suiPriceData.pair.priceNative).toString() },
+        sui: { usd: suiUsdPrice, symbol: "SUI", coinType: SUI_TYPE_ARG },
+        tokens: tokensPrices,
       };
       this.setCachedData(cacheKey, prices);
       return prices;
@@ -209,8 +311,30 @@ export class WalletProvider {
     const totalUsdFormatted = new BigNumber(portfolio.totalUsd).toFixed(2);
     const totalSuiFormatted = new BigNumber(portfolio.totalSui).toFixed(4);
 
-    output += `Total Value: $${totalUsdFormatted} (${totalSuiFormatted} SUI)\n`;
+    output += `Sui value: $${totalUsdFormatted} (${totalSuiFormatted} SUI)\n`;
 
+    // Calculate total token value
+    let totalTokenValue = new BigNumber(0);
+
+    // If there are token details, append them to the output.
+    if (portfolio.tokens && portfolio.tokens.length > 0) {
+      output += "Tokens:\n";
+      portfolio.tokens.forEach((token) => {
+        const tokenUsdFormatted = new BigNumber(token.usd).toFixed(2);
+        output += `- ${token.symbol}(${token.totalBalance}): $${tokenUsdFormatted}\n`;
+        totalTokenValue = totalTokenValue.plus(new BigNumber(token.usd));
+      });
+    }
+
+    // Calculate and append total portfolio value
+    const totalPortfolioValue = new BigNumber(portfolio.totalUsd).plus(
+      totalTokenValue
+    );
+    output += `\nTotal Portfolio Value: $${totalPortfolioValue.toFixed(2)}\n`;
+    output += `Total SUI Value: $${totalUsdFormatted}\n`;
+    output += `Total Token Value: $${totalTokenValue.toFixed(2)}\n`;
+
+    console.log("Portfolio:", output);
     return output;
   }
 

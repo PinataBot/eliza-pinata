@@ -7,6 +7,10 @@ import { elizaLogger } from "@elizaos/core";
  * The file should be located at ./whitelist_cointypes.json
  * relative to the current working directory
  *
+ *
+ * WARNING:
+ *     Don't add to whitelist_cointypes.json - SUI type token, indedex don't know how to fetch price for sui
+ *
  * @returns Array of token addresses as strings
  * @throws Error if file not found or invalid JSON
  */

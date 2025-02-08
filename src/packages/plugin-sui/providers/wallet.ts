@@ -144,8 +144,8 @@ export class WalletProvider {
         // need to figureout how to fetch sui price with insidex
         const coinTypes = await this.loadingWhitelistTokens();
         const response = await fetchTokenData(coinTypes.join(","));
-        console.log("Response:", response.data);
-        return response.data;
+        console.log("Response:", response);
+        return response;
       } catch (error) {
         console.error(`Attempt ${i + 1} failed:`, error);
         lastError = error;
@@ -254,7 +254,7 @@ export class WalletProvider {
 
         // Map the response to an array of pricing information.
         // Adjust the mapping based on the actual structure returned by the API.
-        tokensPrices = response.data
+        tokensPrices = response
           .map((tokenData: any) => {
             // Find the matching token from the filtered tokens array
             const filteredToken = filteredTokens.find(

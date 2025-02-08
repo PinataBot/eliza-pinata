@@ -1,4 +1,6 @@
-export async function fetchTokenData(coinType: string) {
+import { CoinInfo, CoinsInfo } from "../plugin-sui/types";
+
+export async function fetchTokenData(coinType: string): Promise<CoinsInfo> {
   try {
     const response = await fetch(
       `https://api.insidex.trade/external/coin-details?coins=${coinType}`

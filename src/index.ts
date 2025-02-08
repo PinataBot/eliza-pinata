@@ -170,8 +170,9 @@ const startAgents = async () => {
 
   const isDaemonProcess = process.env.DAEMON_PROCESS === "true";
   if (!isDaemonProcess) {
+    const isAutomated = false;
     elizaLogger.log("Chat started. Type 'exit' to quit.");
-    const chat = startChat(characters);
+    const chat = await startChat(characters, isAutomated);
     chat();
   }
 };

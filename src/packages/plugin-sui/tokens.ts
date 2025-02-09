@@ -1,36 +1,46 @@
-import { SUI_DECIMALS } from "@mysten/sui/utils";
+import { SUI_DECIMALS, SUI_TYPE_ARG } from "@mysten/sui/utils";
+import { fetchTokenData } from "./utils/fetchTokensData.ts";
+import { FilteredCoinMetadata } from "./types/tokenMarketDataTypes.ts";
 
 export interface TokenMetadata {
-    symbol: string;
-    decimals: number;
-    tokenAddress: string;
+  symbol: string;
+  decimals: number;
+  tokenAddress: string;
 }
 
-export const tokens: Map<string, TokenMetadata> = new Map([
-    [
-        "SUI",
-        {
-            symbol: "SUI",
-            decimals: SUI_DECIMALS,
-            tokenAddress: "0x2::sui::SUI",
-        },
-    ],
-    [
-        "USDC",
-        {
-            symbol: "USDC",
-            decimals: 6,
-            tokenAddress:
-                "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC",
-        },
-    ],
-]);
+export const getSuiMetadata = (): FilteredCoinMetadata => {
+  return {
+    _id: "670cfe741ce51ed9bf4433c6",
+    decimals: 9,
+    name: "Sui",
+    symbol: "SUI",
+    description: "",
+    supply: 100000, // TODO::fix we need supply change it to BigInt
+    createdAt: 1681392093366,
+    lastTradeAt: 1718083324265,
+    id: "0x9258181f5ceac8dbffb7030890243caed69a9599d2886d957a9cb7656af3bdb3",
+    coinType: "0x2::sui::SUI",
+    dev: "0x0000000000000000000000000000000000000000000000000000000000000000",
+  };
+};
 
-export const getTokenMetadata = (symbol: string) => {
-    return tokens.get(symbol.toUpperCase());
+// TODO::refactor this to universal function
+export const getTokenMetadata = async (
+  coinType: string
+): Promise<FilteredCoinMetadata> => {
+  if (
+    coinType === "0x2::sui::SUI" ||
+    coinType === SUI_TYPE_ARG ||
+    coinType ===
+      "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI"
+  ) {
+    return getSuiMetadata();
+  }
+  const data = await fetchTokenData(coinType);
+  return data[0].metadata;
 };
 
 export const getAmount = (amount: string, meta: TokenMetadata) => {
-    const v = parseFloat(amount);
-    return BigInt(v * 10 ** meta.decimals);
+  const v = parseFloat(amount);
+  return BigInt(v * 10 ** meta.decimals);
 };

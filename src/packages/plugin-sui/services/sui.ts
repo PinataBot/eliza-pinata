@@ -15,6 +15,8 @@ import {
   TransactionObjectArgument,
 } from "@mysten/sui/transactions";
 import { AGENT_OBJECT_ID, PACKAGE_API, PACKAGE_ID } from "../utils/contract.ts";
+import { FilteredCoinMetadata } from "../types/tokenMarketDataTypes.ts";
+import { SUI_TYPE_ARG } from "@mysten/sui/utils";
 
 const aggregatorURL = "https://api-sui.cetus.zone/router_v2/find_routes";
 
@@ -39,8 +41,8 @@ export class SuiService extends Service {
     return null;
   }
 
-  async getTokenMetadata(token: string) {
-    const meta = getTokenMetadata(token);
+  async getTokenMetadata(coinType: string): Promise<FilteredCoinMetadata> {
+    const meta = await getTokenMetadata(coinType);
     return meta;
   }
 
@@ -48,7 +50,17 @@ export class SuiService extends Service {
     return this.wallet.toSuiAddress();
   }
 
-  getAmount(amount: string | number, meta: TokenMetadata) {
+  getAmount(amount: string | number, meta: FilteredCoinMetadata) {
+    console.log("Amount -------", amount);
+    console.log("Meta -------", meta);
+    console.log(
+      "Amount * 10^decimals -------",
+      Number(amount) * Math.pow(10, meta.decimals)
+    );
+    console.log(
+      "BIGINT",
+      BigInt(Number(amount) * Math.pow(10, meta.decimals)).toString()
+    );
     return BigInt(Number(amount) * Math.pow(10, meta.decimals));
   }
 
@@ -69,26 +81,27 @@ export class SuiService extends Service {
   }
 
   async swapToken(
-    fromToken: string,
+    fromCoinType: string,
+    toCoinType: string,
     amount: number | string,
-    out_min_amount: number,
-    targetToken: string,
+    out_min_amount: number
   ): Promise<SwapResult> {
-    const fromMeta = getTokenMetadata(fromToken);
-    const toMeta = getTokenMetadata(targetToken);
-    elizaLogger.info("From token metadata:", fromMeta);
-    elizaLogger.info("To token metadata:", toMeta);
+    const fromMeta = await getTokenMetadata(fromCoinType);
+    const toMeta = await getTokenMetadata(toCoinType);
     const client = new AggregatorClient(
       aggregatorURL,
       this.wallet.toSuiAddress(),
       this.suiClient,
-      Env.Mainnet,
+      Env.Mainnet
     );
+
+    const amountBN = new BN(amount.toString());
+
     // provider list : https://api-sui.cetus.zone/router_v2/status
     const routerRes = await client.findRouters({
-      from: fromMeta.tokenAddress,
-      target: toMeta.tokenAddress,
-      amount: new BN(amount),
+      from: fromMeta.coinType,
+      target: toMeta.coinType,
+      amount: amountBN,
       byAmountIn: true, // `true` means fix input amount, `false` means fix output amount
       depth: 3, // max allow 3, means 3 hops
       providers: [
@@ -116,10 +129,10 @@ export class SuiService extends Service {
       elizaLogger.error(
         "No router found" +
           JSON.stringify({
-            from: fromMeta.tokenAddress,
-            target: toMeta.tokenAddress,
+            from: fromMeta.coinType,
+            target: toMeta.coinType,
             amount: amount,
-          }),
+          })
       );
       return {
         success: false,
@@ -139,14 +152,18 @@ export class SuiService extends Service {
     let coin: TransactionObjectArgument;
     const routerTx = new Transaction();
 
-    if (fromToken.toUpperCase() === "SUI") {
+    console.log("Amount -------", amount);
+    console.log(fromCoinType.toUpperCase() === SUI_TYPE_ARG.toUpperCase());
+    if (fromCoinType.toUpperCase() === SUI_TYPE_ARG.toUpperCase()) {
       coin = routerTx.splitCoins(routerTx.gas, [amount]);
     } else {
       const allCoins = await this.suiClient.getCoins({
         owner: this.wallet.toSuiAddress(),
-        coinType: fromMeta.tokenAddress,
+        coinType: fromMeta.coinType,
         limit: 30,
       });
+
+      console.log("All coins:", allCoins);
 
       if (allCoins.data.length === 0) {
         elizaLogger.error("No coins found");
@@ -170,7 +187,7 @@ export class SuiService extends Service {
     }
 
     const targetCoin = await client.routerSwap({
-      routers: routerRes!.routes,
+      routers: routerRes.routes,
       byAmountIn: true,
       txb: routerTx,
       inputCoin: coin,
@@ -190,12 +207,21 @@ export class SuiService extends Service {
     //     ],
     //     typeArguments: [otherType],
     // });
+    routerTx.setGasBudget(100_000_000); // 0.1 SUI
     routerTx.transferObjects([targetCoin], this.wallet.toSuiAddress());
     routerTx.setSender(this.wallet.toSuiAddress());
     const result = await client.signAndExecuteTransaction(
       routerTx,
-      this.wallet,
+      this.wallet
     );
+
+    if (result.effects.status.status === "failure") {
+      return {
+        success: false,
+        tx: "",
+        message: "Swap failed: " + result.effects.status.error,
+      };
+    }
 
     await this.suiClient.waitForTransaction({
       digest: result.digest,

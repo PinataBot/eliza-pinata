@@ -7,7 +7,7 @@ import { coinsProvider } from "./providers/coins.ts";
 import swapToken from "./actions/swap.ts";
 import transferToken from "./actions/transfer.ts";
 import tokenAnalysisAction from "./actions/tokenAnalysis.ts";
-// import portfolioAnalysisAction from "./actions/portfolioAnalysis.ts";
+import portfolioAnalysisAction from "./actions/portfolioAnalysis.ts";
 import summarizeRecommendationsAction from "./actions/summarizeRecommendations.ts";
 import analyzeMultipleTokensAction from "./actions/analyzeMultipleTokens.ts";
 export { WalletProvider };
@@ -20,7 +20,7 @@ export const suiPlugin: Plugin = {
     swapToken,
     tokenAnalysisAction,
     summarizeRecommendationsAction,
-    //portfolioAnalysisAction,
+    portfolioAnalysisAction,
     analyzeMultipleTokensAction,
   ],
   evaluators: [],

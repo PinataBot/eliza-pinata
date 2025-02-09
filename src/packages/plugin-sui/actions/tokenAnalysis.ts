@@ -13,7 +13,8 @@ import {
 } from "@elizaos/core";
 import { z } from "zod";
 import { fetchTokenData } from "../utils/fetchTokensData.ts";
-import { putBlob } from "../utils/walrus.ts";
+import { putBlob, putBlobAndSave } from "../utils/walrus.ts";
+import { SupabaseDatabaseAdapter } from "../../adapter-supabase/src";
 
 interface CoinTypeTypes extends Content {
   coinType: any;
@@ -40,7 +41,7 @@ Respond with a JSON markdown block containing only the extracted value.
 
 // Compose the prompt to analyze the token data
 const analysisPrompt = (
-  marketData: any
+  marketData: any,
 ) => `Analyze the following token data and provide a trading recommendation.
 Return the response as a JSON object with the following structure:
 {
@@ -63,7 +64,7 @@ export default {
   examples: [],
   validate: async (
     runtime: IAgentRuntime,
-    message: Memory
+    message: Memory,
   ): Promise<boolean> => {
     elizaLogger.info("Validating ANALYZE_TRADE for agent:", message.agentId);
     return true;
@@ -126,14 +127,16 @@ export default {
       }
 
       elizaLogger.debug("Raw analysis response:", analysisResult);
-      await putBlob(analysisResult);
+      putBlobAndSave(runtime, analysisResult, "response").then(() => {
+        console.log("Blob saved");
+      });
       // Parse the analysis response
       const tradeRecommendation = parseJSONObjectFromText(analysisResult);
       elizaLogger.info(
         `Parsed recommendation for token ${
           coinTypeContent.coinType || "unknown"
         }:`,
-        tradeRecommendation
+        tradeRecommendation,
       );
 
       if (callback) {

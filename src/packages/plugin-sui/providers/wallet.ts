@@ -21,6 +21,7 @@ import { parseAccount, SuiNetwork } from "../utils.ts";
 import axios from "axios";
 import { loadWhitelistTokens } from "../utils/loadWhitelistTokens.ts";
 import { fetchTokenData } from "../utils/fetchTokensData.ts";
+import { FilteredCoinInfo } from "../types/tokenMarketDataTypes.ts";
 // Provider configuration
 const PROVIDER_CONFIG = {
   MAX_RETRIES: 3,
@@ -255,15 +256,15 @@ export class WalletProvider {
         // Map the response to an array of pricing information.
         // Adjust the mapping based on the actual structure returned by the API.
         tokensPrices = response
-          .map((tokenData: any) => {
+          .map((tokenData: FilteredCoinInfo) => {
             // Find the matching token from the filtered tokens array
             const filteredToken = filteredTokens.find(
-              (token) => token.coinType === tokenData.coinMetadata.coinType
+              (token) => token.coinType === tokenData.metadata.coinType
             );
             if (!filteredToken) return null; // Skip if no matching token is found
 
             // Get decimals from the token metadata
-            const decimals = tokenData.coinMetadata.decimals;
+            const decimals = tokenData.metadata.decimals;
             // Compute the factor (10^decimals)
             const factor = new BigNumber(10).pow(decimals);
             // Convert the raw balance into a true human-readable balance
@@ -272,15 +273,15 @@ export class WalletProvider {
             ).dividedBy(factor);
 
             // Use coinPrice from tokenData. If missing, default to 0.
-            const coinPrice = tokenData.coinPrice
-              ? new BigNumber(tokenData.coinPrice)
+            const coinPrice = tokenData.price
+              ? new BigNumber(tokenData.price)
               : new BigNumber(0);
             // Compute the total USD value for this token by multiplying the true balance by the coinPrice
             const totalUsdValue = trueBalance.multipliedBy(coinPrice);
 
             return {
-              symbol: tokenData.coinMetadata.symbol,
-              coinType: tokenData.coinMetadata.coinType,
+              symbol: tokenData.metadata.symbol,
+              coinType: tokenData.metadata.coinType,
               usd: totalUsdValue.toString(), // The USD value as a string
               totalBalance: trueBalance.toString(),
             };

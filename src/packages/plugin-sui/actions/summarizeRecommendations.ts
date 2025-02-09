@@ -8,6 +8,26 @@ import {
   composeContext,
 } from "@elizaos/core";
 
+// Compose the analysis prompt
+const analysisPrompt = `Analyze these tokens recommendations data and identify the best trading opportunity.
+Return a JSON object with:
+{
+  "tokenName": string,
+  "coinType": string, 
+  "recommendation": "BUY" | "SELL" | "HOLD",
+  "confidence": number (0-100),
+  "reasoning": string,
+  "risks": string[],
+  "opportunities": string[],
+  "opinion": string (explain why this token was selected over others)
+}
+
+Token Recommendations:
+{{recentMessages}}
+
+Given the recent messages, analyze the token recommendations and identify the best trading opportunity. 
+`;
+
 export default {
   name: "SUMMARIZE_RECOMMENDATIONS",
   similes: ["SUMMARIZE", "ANALYZE_RECOMMENDATIONS", "BEST_TRADE"],
@@ -40,23 +60,6 @@ export default {
       if (!tokenRecommendations || !Array.isArray(tokenRecommendations)) {
         throw new Error("Invalid or missing token recommendations");
       }
-
-      // Compose the analysis prompt
-      const analysisPrompt = `Analyze these token recommendations data and identify the best trading opportunity.
-Return a JSON object with:
-{
-  "tokenName": string,
-  "coinType": string, 
-  "recommendation": "BUY" | "SELL" | "HOLD",
-  "confidence": number (0-100),
-  "reasoning": string,
-  "risks": string[],
-  "opportunities": string[],
-  "opinion": string (explain why this token was selected over others)
-}
-
-Token Recommendations:
-${JSON.stringify(tokenRecommendations, null, 2)}`;
 
       const context = composeContext({
         state,

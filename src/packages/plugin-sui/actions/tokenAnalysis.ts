@@ -15,6 +15,7 @@ import { z } from "zod";
 import { fetchTokenData } from "../utils/fetchTokensData.ts";
 import { putBlob, putBlobAndSave } from "../utils/walrus.ts";
 import { SupabaseDatabaseAdapter } from "../../adapter-supabase/src";
+import { loadWhitelistTokens } from "../utils/loadWhitelistTokens.ts";
 
 interface CoinTypeTypes extends Content {
   coinType: any;
@@ -41,8 +42,9 @@ Respond with a JSON markdown block containing only the extracted value.
 
 // Compose the prompt to analyze the token data
 const analysisPrompt = (
-  marketData: any,
-) => `Analyze the following token data and provide a trading recommendation.
+  marketData: any
+) => `Analyze the following tokens data and provide a trading recommendation.
+Choose the best token to trade. ONLY ONE TOKEN YOU SHOULD RECOMMEND.
 Return the response as a JSON object with the following structure:
 {
   "tokenName": string,
@@ -54,7 +56,7 @@ Return the response as a JSON object with the following structure:
   "opportunities": string[]
 }
 
-Token data: ${marketData} 
+Tokens data: ${marketData} 
 `;
 
 export default {
@@ -64,7 +66,7 @@ export default {
   examples: [],
   validate: async (
     runtime: IAgentRuntime,
-    message: Memory,
+    message: Memory
   ): Promise<boolean> => {
     elizaLogger.info("Validating ANALYZE_TRADE for agent:", message.agentId);
     return true;
@@ -80,31 +82,32 @@ export default {
         state = await runtime.updateRecentMessageState(state);
       }
 
-      const coinTypeSchema = z.object({
-        coinType: z.string(),
-      });
+      // const coinTypeSchema = z.object({
+      //   coinType: z.string(),
+      // });
 
-      // Compose transfer context
-      const tokenInfoContext = composeContext({
-        state,
-        template: coinTypePrompt,
-      });
+      // // Compose transfer context
+      // const tokenInfoContext = composeContext({
+      //   state,
+      //   template: coinTypePrompt,
+      // });
 
-      // Execute prompt to extract cointype
-      const content = await generateObject({
-        runtime,
-        context: tokenInfoContext,
-        schema: coinTypeSchema,
-        modelClass: ModelClass.LARGE,
-      });
+      // // Execute prompt to extract cointype
+      // const content = await generateObject({
+      //   runtime,
+      //   context: tokenInfoContext,
+      //   schema: coinTypeSchema,
+      //   modelClass: ModelClass.SMALL,
+      // });
 
-      const coinTypeContent = content.object as CoinTypeTypes;
-      console.log("Coin Type", coinTypeContent.coinType);
-      if (!coinTypeContent.coinType) {
+      // const coinTypeContent = content.object as CoinTypeTypes;
+      // console.log("Coin Type", coinTypeContent.coinType);
+      const whilelistTokens = await loadWhitelistTokens();
+      if (!whilelistTokens) {
         throw new Error("Can't fetch coin type");
       }
       // TODO:: check if the coinType is valid
-      const tokenData = await fetchTokenData(coinTypeContent.coinType);
+      const tokenData = await fetchTokenData(whilelistTokens.join(","));
       console.log("Token Data", tokenData);
 
       const analysisContext = composeContext({
@@ -134,9 +137,9 @@ export default {
       const tradeRecommendation = parseJSONObjectFromText(analysisResult);
       elizaLogger.info(
         `Parsed recommendation for token ${
-          coinTypeContent.coinType || "unknown"
+          tradeRecommendation.coinType || "unknown"
         }:`,
-        tradeRecommendation,
+        tradeRecommendation
       );
 
       if (callback) {

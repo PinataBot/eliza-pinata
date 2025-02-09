@@ -1,6 +1,6 @@
 import { settings } from "@elizaos/core";
 import readline from "readline";
-import {loadWhitelistTokens} from "../packages/plugin-sui/utils/loadWhitelistTokens.ts";
+import { loadWhitelistTokens } from "../packages/plugin-sui/utils/loadWhitelistTokens.ts";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -35,7 +35,9 @@ async function handleUserInput(input, agentId) {
     );
 
     const data = await response.json();
+    console.log("\n\n\nagent output:", data);
     data.forEach((message) => console.log(`${"Agent"}: ${message.text}`));
+    return data;
   } catch (error) {
     console.error("Error fetching response:", error);
   }
@@ -45,13 +47,15 @@ export async function startChat(characters, isAutomated = false) {
   async function chat() {
     const agentId = characters[0].name ?? "Agent";
     if (isAutomated) {
-      const input = "Hello";
-      const tokenDataSummary = [];
-      const whilelistTokens = await loadWhitelistTokens();
-      for (const token of whilelistTokens) {
-        await handleUserInput(input, agentId);
-      }
+      // const tokenDataSummary = [];
+      const promptCoinType = `Analyze tokens data and provide a trading recommendation.`;
+      const aiAgentOutputData = await handleUserInput(promptCoinType, agentId);
+      console.log("ai agent output data:", aiAgentOutputData);
+      //tokenDataSummary.push(aiAgentOutputData);
 
+      //const tokenDataSummaryString = JSON.stringify(tokenDataSummary);
+      //console.log("\n\n\ntokenDataSummary:", tokenDataSummaryString);
+      console.log("Sleeping for 5 minutes");
       setTimeout(chat, 5 * 60 * 1000); // 5 minutes
     } else {
       rl.question("You: ", async (input) => {

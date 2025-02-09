@@ -9,8 +9,7 @@ import {
 
 import NodeCache from "node-cache";
 import * as path from "path";
-import axios from "axios";
-import { CoinsInfo } from "../types";
+import { FilteredCoinsInfo } from "../types";
 import { loadWhitelistTokens } from "../utils/loadWhitelistTokens.ts";
 import { fetchTokenData } from "../utils/fetchTokensData.ts";
 // Provider configuration
@@ -67,18 +66,12 @@ export class CoinsProvider {
     await this.writeToCache(cacheKey, data);
   }
 
-  private async fetchTokensInfoRetry(): Promise<CoinsInfo> {
+  private async fetchTokensInfoRetry(): Promise<FilteredCoinsInfo> {
     let lastError: Error;
     const coinTypes = loadWhitelistTokens();
     for (let i = 0; i < PROVIDER_CONFIG.MAX_RETRIES; i++) {
       try {
         const coinsInfo = await fetchTokenData(coinTypes.join(","));
-        coinsInfo.forEach((coin) => {
-          if (coin?.coinMetadata?.iconUrl) {
-            coin.coinMetadata.iconUrl = "";
-          }
-        });
-
         return coinsInfo;
       } catch (error) {
         console.error(`Attempt ${i + 1} failed:`, error);
@@ -95,7 +88,7 @@ export class CoinsProvider {
     throw lastError;
   }
 
-  async fetchTokensInfo(): Promise<CoinsInfo> {
+  async fetchTokensInfo(): Promise<FilteredCoinsInfo> {
     try {
       // const cacheKey = `tokens-${Date.now()}`;
 
@@ -105,7 +98,7 @@ export class CoinsProvider {
         date.getMonth() + 1
       }-${date.getDate()}-${date.getHours()}-${roundedMinutes}`;
 
-      const cachedValue = await this.getCachedData<CoinsInfo>(cacheKey);
+      const cachedValue = await this.getCachedData<FilteredCoinsInfo>(cacheKey);
 
       if (cachedValue) {
         console.log("Cache hit for fetchTokensInfo");
@@ -127,17 +120,17 @@ export class CoinsProvider {
     }
   }
 
-  formatCoinsInfo(runtime, coinsInfo: CoinsInfo): string {
+  formatCoinsInfo(runtime, coinsInfo: FilteredCoinsInfo): string {
     let output = `${runtime.character.name}\n`;
     output += `Coins Information:\n`;
     output += `Total Coins: ${coinsInfo.length}\n`;
 
     for (const coin of coinsInfo) {
-      output += `Coin name: ${coin.coinMetadata.name}\n`;
-      output += `Coin type: ${coin.coinMetadata.coinType}\n`;
-      output += `Coin symbol: ${coin.coinMetadata.symbol}\n`;
+      output += `Coin name: ${coin.metadata.name}\n`;
+      output += `Coin type: ${coin.metadata.coinType}\n`;
+      output += `Coin symbol: ${coin.metadata.symbol}\n`;
 
-      output += `Market Cap: ${coin.marketCap}\n`;
+      output += `Market Cap: ${coin.mc}\n`;
       output += "-----------------------------------\n";
     }
 

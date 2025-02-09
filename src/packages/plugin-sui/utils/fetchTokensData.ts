@@ -1,6 +1,11 @@
-import { CoinInfo, CoinsInfo } from "../types";
+import {
+  filterCoinsInfo,
+  FilteredCoinsInfo,
+} from "../types/tokenMarketDataTypes.ts";
 
-export async function fetchTokenData(coinType: string): Promise<CoinsInfo> {
+export async function fetchTokenData(
+  coinType: string
+): Promise<FilteredCoinsInfo> {
   try {
     const response = await fetch(
       `https://api.insidex.trade/external/coin-details?coins=${coinType}`
@@ -29,8 +34,8 @@ export async function fetchTokenData(coinType: string): Promise<CoinsInfo> {
         }
       });
     }
-
-    return data;
+    const filteredData = filterCoinsInfo(data);
+    return filteredData;
   } catch (error) {
     console.error(`Attempt failed:`, error);
     return null;

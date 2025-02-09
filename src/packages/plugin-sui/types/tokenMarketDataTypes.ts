@@ -1,3 +1,7 @@
+/******************************************************
+ * 1. Raw Interfaces
+ ******************************************************/
+
 export type CoinsInfo = CoinInfo[];
 
 export interface CoinInfo {
@@ -104,4 +108,119 @@ export interface AdvancedScores {
   uniqueSellersWithVolumeMoreThan1000_7d: string;
   uniqueBuyersWithVolumeMoreThan1000_14d: string;
   uniqueSellersWithVolumeMoreThan1000_14d: string;
+}
+
+/******************************************************
+ * 2. Filtered Interfaces (only the most important fields)
+ ******************************************************/
+
+export type FilteredCoinsInfo = FilteredCoinInfo[];
+
+// 2a. Filtered metadata that excludes iconUrl
+export interface FilteredCoinMetadata {
+  _id: string;
+  coinType: string;
+  decimals: number;
+  description: string;
+  id: string;
+  name: string;
+  symbol: string;
+  dev: string;
+  supply: number;
+  createdAt: number;
+  lastTradeAt: number;
+}
+
+// 2b. Filtered Coin Info
+export interface FilteredCoinInfo {
+  mint: boolean;
+  lpB: boolean;
+  sup: number;
+  liqUsd: number;
+  liqPct: number;
+  hp: boolean;
+  mc: number;
+  fdmc: number;
+  price: number;
+  chg: number[]; // [5m, 1h, 6h, 24h] price change
+  volBuy: number[]; // [5m, 1h, 6h, 24h] buy volume
+  volSell: number[]; // [5m, 1h, 6h, 24h] sell volume
+  vol: number[]; // [5m, 1h, 6h, 24h] total volume
+  top10H: number;
+  top20H: number;
+  devH: number;
+  devHPct: number;
+  metadata: FilteredCoinMetadata;
+}
+
+/******************************************************
+ * 3. Filtering Function
+ ******************************************************/
+
+export function filterCoinsInfo(rawData: CoinsInfo): FilteredCoinsInfo {
+  return rawData.map((coin: CoinInfo) => ({
+    // Core properties (shortened names)
+    mint: coin.isMintable === "true",
+    lpB: coin.lpBurnt === "true",
+    sup: Number(coin.coinSupply),
+    liqUsd: Number(coin.totalLiquidityUsd),
+    liqPct: Number(coin.percentageTokenSupplyInLiquidity),
+    hp: coin.isCoinHoneyPot === "true",
+    mc: Number(coin.marketCap),
+    fdmc: Number(coin.fullyDilutedMarketCap),
+    price: Number(coin.coinPrice),
+
+    // Grouped price change percentages
+    chg: [
+      Number(coin.percentagePriceChange5m),
+      Number(coin.percentagePriceChange1h),
+      Number(coin.percentagePriceChange6h),
+      Number(coin.percentagePriceChange24h),
+    ],
+
+    // Grouped buy volumes
+    volBuy: [
+      Number(coin.buyVolume5m),
+      Number(coin.buyVolume1h),
+      Number(coin.buyVolume6h),
+      Number(coin.buyVolume24h),
+    ],
+
+    // Grouped sell volumes
+    volSell: [
+      Number(coin.sellVolume5m),
+      Number(coin.sellVolume1h),
+      Number(coin.sellVolume6h),
+      Number(coin.sellVolume24h),
+    ],
+
+    // Grouped total volumes
+    vol: [
+      Number(coin.volume5m),
+      Number(coin.volume1h),
+      Number(coin.volume6h),
+      Number(coin.volume24h),
+    ],
+
+    // Holder distributions
+    top10H: Number(coin.top10HolderPercentage),
+    top20H: Number(coin.top20HolderPercentage),
+    devH: Number(coin.coinDevHoldings),
+    devHPct: Number(coin.coinDevHoldingsPercentage),
+
+    // Metadata (without iconUrl)
+    metadata: {
+      _id: coin.coinMetadata._id,
+      coinType: coin.coinMetadata.coinType,
+      decimals: Number(coin.coinMetadata.decimals),
+      description: coin.coinMetadata.description,
+      id: coin.coinMetadata.id,
+      name: coin.coinMetadata.name,
+      symbol: coin.coinMetadata.symbol,
+      dev: coin.coinMetadata.dev,
+      supply: Number(coin.coinMetadata.supply),
+      createdAt: Number(coin.coinMetadata.createdAt),
+      lastTradeAt: Number(coin.coinMetadata.lastTradeAt),
+    },
+  }));
 }

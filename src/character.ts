@@ -1,7 +1,6 @@
-import { Character, defaultCharacter, ModelProviderName } from "@elizaos/core";
+import { Character, ModelProviderName } from "@elizaos/core";
 
 export const character: Character = {
-  ...defaultCharacter,
   name: "Sui Squeak",
   username: "sui-squeak",
   plugins: [],

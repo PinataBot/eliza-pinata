@@ -1,10 +1,11 @@
 import { DirectClient } from "@elizaos/client-direct";
 import {
   AgentRuntime,
+  type Character,
   elizaLogger,
+  IAgentRuntime,
   settings,
   stringToUuid,
-  type Character,
 } from "@elizaos/core";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import { createNodePlugin } from "@elizaos/plugin-node";
@@ -23,8 +24,6 @@ import {
 } from "./config/index.ts";
 import { initializeDatabase } from "./database/index.ts";
 import suiPlugin from "./packages/plugin-sui/index.ts";
-import { putBlob } from "./packages/plugin-sui/utils/walrus.ts";
-import { SupabaseDatabaseAdapter } from "./packages/adapter-supabase/src/index.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,12 +44,12 @@ export function createAgent(
   character: Character,
   db: any,
   cache: any,
-  token: string
+  token: string,
 ) {
   elizaLogger.success(
     elizaLogger.successesTitle,
     "Creating runtime for character",
-    character.name
+    character.name,
   );
 
   nodePlugin ??= createNodePlugin();
@@ -68,7 +67,7 @@ export function createAgent(
     ].filter(Boolean),
     providers: [],
     actions: [],
-    services: [],
+    services: [...suiPlugin.services],
     managers: [],
     cacheManager: cache,
   });
@@ -106,7 +105,7 @@ async function startAgent(character: Character, directClient: DirectClient) {
   } catch (error) {
     elizaLogger.error(
       `Error starting agent for character ${character.name}:`,
-      error
+      error,
     );
     console.error(error);
     throw error;
@@ -145,9 +144,10 @@ const startAgents = async () => {
     characters = await loadCharacters(charactersArg);
   }
   console.log("characters", characters);
+  let runtime: IAgentRuntime;
   try {
     for (const character of characters) {
-      await startAgent(character, directClient as DirectClient);
+      runtime = await startAgent(character, directClient as DirectClient);
     }
   } catch (error) {
     elizaLogger.error("Error starting agents:", error);

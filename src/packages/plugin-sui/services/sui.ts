@@ -212,7 +212,7 @@ export class SuiService extends Service {
    * Add blob. Update NFT table with blobId
    * @param blobId
    */
-  async ª(blobId: string): Promise<string> {
+  async addBlobToNft(blobId: string): Promise<string> {
     console.log("Sui move call addBlob");
     const tx = new Transaction();
     tx.moveCall({

@@ -115,7 +115,7 @@ export async function startChat(characters, isAutomated = false) {
     resultData: AnalysisContent,
     agentId: string,
   ) {
-    if (resultData.confidence > CONFIDENCE_THRESHOLD) {
+    if (resultData.confidence >= CONFIDENCE_THRESHOLD) {
       // 2a. Check portfolio if confidence is high
       const promptPortfolio = `Check portfolio, provide info what to do with new coin data: ${JSON.stringify(
         resultData,
@@ -160,7 +160,7 @@ export async function startChat(characters, isAutomated = false) {
     resultData: AnalysisContent,
     agentId: string,
   ) {
-    if (resultData.confidence > CONFIDENCE_THRESHOLD) {
+    if (resultData.confidence >= CONFIDENCE_THRESHOLD) {
       // Swap if confidence is high and recommendation isn’t "HOLD"
       const promptSwap = `make a swap of your portfolio from coinType: ${resultData.nextAction?.fromCoinType} to destination coinType: ${resultData.nextAction?.toCoinType}, amount to swap: ${resultData.amount}`;
       const aiAgentOutputDataSwap = await handleUserInput(promptSwap, agentId);

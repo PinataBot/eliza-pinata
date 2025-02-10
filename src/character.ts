@@ -1,8 +1,8 @@
 import { Character, ModelProviderName } from "@elizaos/core";
 
 export const character: Character = {
-  name: "PinataAI",
-  username: "pinata-ai",
+  name: "PinataAI-Test",
+  username: "pinata-ai-test",
   plugins: [],
   clients: [],
   modelProvider: ModelProviderName.OPENAI,
@@ -46,9 +46,37 @@ Keep your tone concise, witty, and informative.`,
         },
       },
       {
-        user: "PinataAI",
+        user: "PinataAI-Test",
         content: {
           text: "Starting analysis of tokens and providing info what to do with them",
+        },
+      },
+    ],
+    [
+      {
+        user: "{{user1}}",
+        content: {
+          text: "Analyze tokens and provide info what to do with them",
+          action: "ANALYZE_TOKEN",
+        },
+      },
+      {
+        user: "PinataAI-Test",
+        content: {
+          text: "Starting analysis of tokens and providing info what to do with them",
+        },
+      },
+      {
+        user: "{{user1}}",
+        content: {
+          text: "Swap fromCoinType:0x2::sui::SUI to toCoinType:0x5145494a5f5100e645e4b0aa950fa6b68f614e8c59e17bc5ded3495123a79178::ns::NS, amount: 1",
+          action: "SWAP_TOKEN",
+        },
+      },
+      {
+        user: "PinataAI-Test",
+        content: {
+          text: "Starting swap of 0x2::sui::SUI to 0x5145494a5f5100e645e4b0aa950fa6b68f614e8c59e17bc5ded3495123a79178::ns::NS, amount: 1",
         },
       },
     ],
@@ -61,7 +89,7 @@ Keep your tone concise, witty, and informative.`,
         },
       },
       {
-        user: "PinataAI",
+        user: "PinataAI-Test",
         content: {
           text: "Here is my portfolio",
         },
@@ -71,12 +99,12 @@ Keep your tone concise, witty, and informative.`,
       {
         user: "{{user1}}",
         content: {
-          text: "Swap 0x2::sui::SUI to toCoinType:0x5145494a5f5100e645e4b0aa950fa6b68f614e8c59e17bc5ded3495123a79178::ns::NS, amount: 1",
+          text: "Swap fromCoinType:0x2::sui::SUI to toCoinType:0x5145494a5f5100e645e4b0aa950fa6b68f614e8c59e17bc5ded3495123a79178::ns::NS, amount: 1",
           action: "SWAP_TOKEN",
         },
       },
       {
-        user: "PinataAI",
+        user: "PinataAI-Test",
         content: {
           text: "Starting swap of 0x2::sui::SUI to 0x5145494a5f5100e645e4b0aa950fa6b68f614e8c59e17bc5ded3495123a79178::ns::NS, amount: 1",
         },

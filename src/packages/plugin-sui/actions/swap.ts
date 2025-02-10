@@ -33,6 +33,10 @@ function isSwapContent(content: Content): content is SwapPayload {
 }
 
 const swapTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
+Fetch swap request from user. 
+
+1. **Swap Request:**
+   - Should contain from coinType, destination/to coinType and amount to swap.
 
 Example response:
 \`\`\`json
@@ -43,6 +47,7 @@ Example response:
 }
 \`\`\`
 
+Example response:
 \`\`\`json
 {
     "from_coin_type": "0x2::sui::SUI",
@@ -54,9 +59,9 @@ Example response:
 {{recentMessages}}
 
 Given the recent messages, extract the following information about the requested token swap:
-- Source Coin Type you want to swap from
-- Destination Coin Type you want to swap to
-- Source Coin Amount to swap
+- From CoinType you want to swap from
+- Destination CoinType you want to swap to
+- Amount to swap
 
 
 Respond with a JSON markdown block containing only the extracted values.`;
@@ -71,11 +76,10 @@ export default {
     "SWAP_FROM_ONE_COIN_TYPE_TO_ANOTHER",
   ],
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    console.log("Validating sui swap from user:", message.userId);
+    elizaLogger.info("Validating SWAP_TOKEN from user:", message.userId);
     return true;
   },
-  description:
-    "Swap from any coin type in the agent's wallet to another coin type",
+  description: "Perform a token swap.",
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,

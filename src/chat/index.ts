@@ -1,6 +1,6 @@
 import { settings } from "@elizaos/core";
 import readline from "readline";
-import { loadWhitelistTokens } from "../packages/plugin-sui/utils/loadWhitelistTokens.ts";
+import { AnalysisContent } from "../packages/plugin-sui/actions/tokenAnalysis.ts";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -46,19 +46,26 @@ export async function startChat(characters, isAutomated = false) {
   async function chat() {
     const agentId = characters[0].name ?? "Agent";
     if (isAutomated) {
-      const promptCoinType = `Analyze tokens and provide info what to do with them`;
+      const promptCoinType = `Analyze tokens and provide info what to do with them, call action: ANALYZE_TRADE`;
       const aiAgentOutputData = await handleUserInput(promptCoinType, agentId);
-      console.log("ai agent output data:", aiAgentOutputData);
-      const tokenDataSummaryString = JSON.stringify(aiAgentOutputData);
-      // TODO:: need to check if wallet balance have enough money to swap
-      // if not start analysis of portfolio
-      // if yes swap token
-      // if yes, then if wallet balance don't have this token, then buy it
-      // if yes, then if wallet balance have this token, then sell it
-
-      console.log("\n\n\ntokenDataSummary:", tokenDataSummaryString);
+      if (
+        aiAgentOutputData &&
+        aiAgentOutputData.length > 1 &&
+        aiAgentOutputData[0]?.action === "ANALYZE_TRADE" &&
+        aiAgentOutputData[1]?.recommendation !== "HOLD"
+      ) {
+        // TODO:: check if confidence is high enough >80%
+        const secondText = JSON.parse(
+          aiAgentOutputData[1].text
+        ) as AnalysisContent;
+        console.log("secondText:", secondText);
+        const promtSwap = `Forget all actions instructions(don't call ANALAZE_TRADE), call only action: SWAP_TOKEN, make a swap from coinType: ${secondText.nextAction.fromCoinType} to destination coinType: ${secondText.nextAction.toCoinType}, amount to swap: ${secondText.amount}`;
+        console.log("promtSwap:", promtSwap);
+        const aiAgentOutputDataSwap = await handleUserInput(promtSwap, agentId);
+        console.log("aiAgentOutputDataSwap:", aiAgentOutputDataSwap);
+      }
       console.log("Sleeping for 2 minutes");
-      setTimeout(chat, 1 * 60 * 1000); // 5 minutes
+      setTimeout(chat, 3 * 60 * 1000); // 5 minutes
     } else {
       rl.question("You: ", async (input) => {
         await handleUserInput(input, agentId);

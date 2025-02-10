@@ -5,7 +5,7 @@ import { SuiService } from "./services/sui.ts";
 import { coinsProvider } from "./providers/coins.ts";
 
 import swapToken from "./actions/swap.ts";
-import transferToken from "./actions/transfer.ts";
+// import transferToken from "./actions/transfer.ts";
 import tokenAnalysisAction from "./actions/tokenAnalysis.ts";
 import portfolioAnalysisAction from "./actions/portfolioAnalysis.ts";
 //import summarizeRecommendationsAction from "./actions/summarizeRecommendations.ts";
@@ -16,7 +16,7 @@ export const suiPlugin: Plugin = {
   name: "sui",
   description: "Sui Plugin for Eliza",
   actions: [
-    transferToken,
+    // transferToken,
     swapToken,
     tokenAnalysisAction,
     //summarizeRecommendationsAction,

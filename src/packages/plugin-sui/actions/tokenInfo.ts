@@ -142,29 +142,10 @@
 //       return false;
 //     }
 //
-//     async function fetchTokenInfo(coinType: string) {
-//       try {
-//         const response = await fetch(
-//           `https://api.insidex.trade/external/coin-details?coins=${coinType}`
-//         );
 //
-//         if (!response.ok) {
-//           const errorText = await response.text();
-//           throw new Error(
-//             `HTTP error! status: ${response.status}, message: ${errorText}`
-//           );
-//         }
-//
-//         const data = await response.json();
-//         return data;
-//       } catch (error) {
-//         console.error(`Attempt failed:`, error);
-//         return null;
-//       }
-//     }
 //
 //     try {
-//       const tokenInfo = await fetchTokenInfo(tokenInfoContent.coinType);
+//       const tokenInfo = await fetchTokenData(tokenInfoContent.coinType);
 //       if (!tokenInfo) {
 //         console.error("Failed to fetch token info.");
 //         if (callback) {

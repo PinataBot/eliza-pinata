@@ -1,10 +1,11 @@
 import { DirectClient } from "@elizaos/client-direct";
 import {
   AgentRuntime,
+  type Character,
   elizaLogger,
+  IAgentRuntime,
   settings,
   stringToUuid,
-  type Character,
 } from "@elizaos/core";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import { createNodePlugin } from "@elizaos/plugin-node";
@@ -66,7 +67,7 @@ export function createAgent(
     ].filter(Boolean),
     providers: [],
     actions: [],
-    services: [],
+    services: [...suiPlugin.services],
     managers: [],
     cacheManager: cache,
   });
@@ -143,9 +144,10 @@ const startAgents = async () => {
     characters = await loadCharacters(charactersArg);
   }
   console.log("characters", characters);
+  let runtime: IAgentRuntime;
   try {
     for (const character of characters) {
-      await startAgent(character, directClient as DirectClient);
+      runtime = await startAgent(character, directClient as DirectClient);
     }
   } catch (error) {
     elizaLogger.error("Error starting agents:", error);
@@ -170,8 +172,9 @@ const startAgents = async () => {
 
   const isDaemonProcess = process.env.DAEMON_PROCESS === "true";
   if (!isDaemonProcess) {
+    const isAutomated = true;
     elizaLogger.log("Chat started. Type 'exit' to quit.");
-    const chat = startChat(characters);
+    const chat = await startChat(characters, isAutomated);
     chat();
   }
 };
@@ -180,3 +183,15 @@ startAgents().catch((error) => {
   elizaLogger.error("Unhandled error in startAgents:", error);
   process.exit(1);
 });
+
+// let analysisResult = "This is a test analysis result";
+// putBlob(analysisResult).then((blobId) => {
+//   new SupabaseDatabaseAdapter(
+//     process.env.SUPABASE_URL,
+//     process.env.SUPABASE_ANON_KEY,
+//   ).createBlob({
+//     blobId,
+//     content: analysisResult,
+//     type: "response",
+//   });
+// });

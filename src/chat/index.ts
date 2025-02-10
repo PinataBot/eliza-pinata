@@ -1,6 +1,11 @@
 import { settings } from "@elizaos/core";
 import readline from "readline";
 import { AnalysisContent } from "../packages/plugin-sui/actions/tokenAnalysis.ts";
+import {
+  CONFIDENCE_THRESHOLD,
+  IS_AUTOMATED,
+  REPEAT_PROMT_EVERY_MIN,
+} from "../config.ts";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -42,13 +47,10 @@ async function handleUserInput(input, agentId) {
   }
 }
 
-const CONFIDENCE_THRESHOLD = 75;
-const REPEAT_PROMT_EVERY_MIN = 3;
-
-export async function startChat(characters, isAutomated = false) {
+export async function startChat(characters) {
   async function chat() {
     const agentId = characters[0].name ?? "Agent";
-    if (isAutomated) {
+    if (IS_AUTOMATED) {
       automatedChat(agentId).catch(console.error);
     } else {
       manualChat(agentId);

@@ -1,15 +1,11 @@
 import {
   elizaLogger,
-  embed,
-  getEmbeddingZeroVector,
   IAgentRuntime,
   ICacheManager,
   Memory,
   Provider,
   State,
-  UUID,
 } from "@elizaos/core";
-import { v4 as uuid } from "uuid";
 
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 
@@ -22,6 +18,7 @@ import axios from "axios";
 import { loadWhitelistTokens } from "../utils/loadWhitelistTokens.ts";
 import { fetchTokenData } from "../utils/fetchTokensData.ts";
 import { FilteredCoinInfo } from "../types/tokenMarketDataTypes.ts";
+import { REPEAT_PROMT_EVERY_MIN } from "../../../config.ts"; // Provider configuration
 // Provider configuration
 const PROVIDER_CONFIG = {
   MAX_RETRIES: 3,
@@ -49,7 +46,7 @@ interface Prices {
   }>;
 }
 
-const cacheTimeSeconds = 300; // 5 minutes
+const cacheTimeSeconds = REPEAT_PROMT_EVERY_MIN * 60;
 
 export class WalletProvider {
   private cache: NodeCache;

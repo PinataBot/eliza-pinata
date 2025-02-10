@@ -24,7 +24,6 @@ import {
 } from "./config/index.ts";
 import { initializeDatabase } from "./database/index.ts";
 import suiPlugin from "./packages/plugin-sui/index.ts";
-import { getTokenMetadata } from "./packages/plugin-sui/tokens.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -173,9 +172,8 @@ const startAgents = async () => {
 
   const isDaemonProcess = process.env.DAEMON_PROCESS === "true";
   if (!isDaemonProcess) {
-    const isAutomated = true;
     elizaLogger.log("Chat started. Type 'exit' to quit.");
-    const chat = await startChat(characters, isAutomated);
+    const chat = await startChat(characters);
     chat();
   }
 };
@@ -184,15 +182,3 @@ startAgents().catch((error) => {
   elizaLogger.error("Unhandled error in startAgents:", error);
   process.exit(1);
 });
-
-// let analysisResult = "This is a test analysis result";
-// putBlob(analysisResult).then((blobId) => {
-//   new SupabaseDatabaseAdapter(
-//     process.env.SUPABASE_URL,
-//     process.env.SUPABASE_ANON_KEY,
-//   ).createBlob({
-//     blobId,
-//     content: analysisResult,
-//     type: "response",
-//   });
-// });

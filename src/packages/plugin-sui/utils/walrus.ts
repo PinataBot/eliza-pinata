@@ -47,13 +47,18 @@ export async function putBlob(data: string): Promise<{
 export async function putBlobAndSave(
   runtime: IAgentRuntime,
   data: string,
-  type: BlobItemType,
+  type: BlobItemType
 ) {
-  const { blobId, blobObjectId } = await putBlob(data);
-  await (runtime.databaseAdapter as SupabaseDatabaseAdapter).createBlob({
-    blobId,
-    blobObjectId,
-    content: data,
-    type: type,
-  });
+  try {
+    const { blobId, blobObjectId } = await putBlob(data);
+    await (runtime.databaseAdapter as SupabaseDatabaseAdapter).createBlob({
+      blobId,
+      blobObjectId,
+      content: data,
+      type: type,
+    });
+  } catch (error) {
+    // TODO::add retry logic
+    console.error("Can't put blob and save:", error);
+  }
 }

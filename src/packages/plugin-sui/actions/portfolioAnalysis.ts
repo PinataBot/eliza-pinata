@@ -35,6 +35,7 @@ You are provided with a current portfolio and a list of available actions. Your 
    - **Risk Management:**
      - When considering a swap or buy action, assess the portfolio balance to determine the maximum available funds.
      - Apply risk management principles to decide the appropriate trading amount so as not to overexpose the portfolio to any single token.
+     - Don't invest nearly the entire available SUI balance, reserving approximately 0.1 SUI for transaction fees and do not invest more than 10%-20% of the available SUI balance.
    - **Important Considerations:**
      - If you decide to **SELL** a token:
        - Ensure you do not sell all SUI coins; always retain approximately 0.1 SUI for transaction fees.
@@ -127,7 +128,7 @@ export default {
         modelClass: ModelClass.LARGE,
       });
 
-      console.log("Portfolio Content", content);
+      //console.log("Portfolio Content", content);
 
       if (!content) {
         throw new Error("Failed to generate analysis.");

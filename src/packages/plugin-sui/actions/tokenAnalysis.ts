@@ -16,47 +16,62 @@ import { fetchTokenData } from "../utils/fetchTokensData.ts";
 import { putBlob, putBlobAndSave } from "../utils/walrus.ts";
 import { SupabaseDatabaseAdapter } from "../../adapter-supabase/src";
 import { loadWhitelistTokens } from "../utils/loadWhitelistTokens.ts";
+import { walletProvider } from "../providers/wallet.ts";
 
 interface CoinTypeTypes extends Content {
   coinType: any;
 }
 
 // Compose the prompt to analyze the token data
-const coinTypePrompt = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
+const analysisPrompt = (marketData: any, portfolioData: any): string => `
+Analyze the following token data and provide a trading recommendation under a long-term investment perspective. As a long-term investor, consider market trends, risk management, and overall portfolio health.
 
-Example response:
-\`\`\`json
-{
-    "coinType": "0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD"
-}
-\`\`\`
+1. **Data Analysis:**
+   - Evaluate both the market data and the portfolio data thoroughly.
+   - Identify the best token to trade, considering both short-term market trends and long-term growth potential.
+   - Diversification is important; be mindful of not overexposing the portfolio to one token unless a BUY decision is strongly supported by analysis.
 
-{{recentMessages}}
+2. **Decision Making:**
+   - **HOLD Recommendation:**
+     - If the portfolio already holds a sufficient balance of the recommended token or if buying/selling does not offer a clear advantage, recommend HOLD.
+   - **BUY Recommendation:**
+     - Always use SUI as the purchasing asset.
+     - Check the available SUI balance in the portfolio.
+     - **If a BUY is recommended, don't invest nearly the entire available SUI balance, reserving approximately 0.1 SUI for transaction fees.**
+     - IMPORTANT: Don't invest nearly the entire available SUI balance, reserving approximately 0.1 SUI for transaction fees and do not invest more than 10%-20% of the available SUI balance.
+     - The recommended amount should be calculated based on the available SUI balance and the long-term potential of the token.
+     - Check portfolio data context to ensure the recommendation is feasible.
+   - **SELL Recommendation:**
+     - If market conditions suggest reducing exposure, recommend SELL and specify the amount of tokens to sell.
+   - Always apply prudent portfolio and risk management principles to maintain a balanced long-term strategy.
 
-Given the recent messages, extract the following information about the requested coin type analysis:
-- Coin type
+3. **Output Format:**
+   - Return your response as a JSON object with the following structure:
+     \`\`\`json
+     {
+       "tokenName": "<string>",
+       "coinType": "<string>",  // For BUY recommendations, fromCoinType must be "0x2::sui::SUI"
+       "recommendation": "BUY" | "SELL" | "HOLD",
+       "amount": <number>,  // For BUY: the SUI amount to be spent, always check BUY context to ensure the recommendation is feasible; for SELL: the token amount to sell; for HOLD: 0.
+       "confidence": <number between 0 and 100>,
+       "reasoning": "<string>",
+       "risks": ["<string>", "..."],
+       "opportunities": ["<string>", "..."],
+       "nextAction": {
+         "action": "BUY" | "SELL" | "HOLD",
+         "fromCoinType": "<string>",
+         "toCoinType": "<string>",
+         "amount": <number>,
+         "reasoning": "<string>"
+       }
+     }
+     \`\`\`
 
+4. **Context:**
+   - **Portfolio data:** ${portfolioData}
+   - **Tokens data:** ${marketData}
 
-Respond with a JSON markdown block containing only the extracted value.
-`;
-
-// Compose the prompt to analyze the token data
-const analysisPrompt = (
-  marketData: any
-) => `Analyze the following tokens data and provide a trading recommendation.
-Choose the best token to trade. ONLY ONE TOKEN YOU SHOULD RECOMMEND.
-Return the response as a JSON object with the following structure:
-{
-  "tokenName": string,
-  "coinType": string,
-  "recommendation": "BUY" | "SELL" | "HOLD",
-  "confidence": number (0-100),
-  "reasoning": string,
-  "risks": string[],
-  "opportunities": string[]
-}
-
-Tokens data: ${marketData} 
+Based on your analysis of the market and the given portfolio data, provide a trading recommendation that aligns with a long-term investment strategy. If a BUY decision is made, the recommended amount should utilize nearly all available SUI (after reserving ~0.1 SUI for transaction fees).
 `;
 
 export default {
@@ -74,7 +89,8 @@ export default {
   handler: async (runtime, message, state, params, callback) => {
     try {
       elizaLogger.log("Starting ANALYZE_TRADE handler...");
-
+      const walletInfo = await walletProvider.get(runtime, message, state);
+      state.walletInfo = walletInfo;
       // Initialize or update state
       if (!state) {
         state = (await runtime.composeState(message)) as State;
@@ -82,41 +98,24 @@ export default {
         state = await runtime.updateRecentMessageState(state);
       }
 
-      // const coinTypeSchema = z.object({
-      //   coinType: z.string(),
-      // });
-
-      // // Compose transfer context
-      // const tokenInfoContext = composeContext({
-      //   state,
-      //   template: coinTypePrompt,
-      // });
-
-      // // Execute prompt to extract cointype
-      // const content = await generateObject({
-      //   runtime,
-      //   context: tokenInfoContext,
-      //   schema: coinTypeSchema,
-      //   modelClass: ModelClass.SMALL,
-      // });
-
-      // const coinTypeContent = content.object as CoinTypeTypes;
-      // console.log("Coin Type", coinTypeContent.coinType);
       const whilelistTokens = await loadWhitelistTokens();
       if (!whilelistTokens) {
         throw new Error("Can't fetch coin type");
       }
       // TODO:: check if the coinType is valid
       const tokenData = await fetchTokenData(whilelistTokens.join(","));
-      console.log("Token Data", tokenData);
+      //console.log("Token Data", tokenData);
 
       const analysisContext = composeContext({
         state,
-        template: analysisPrompt(JSON.stringify(tokenData)),
+        template: analysisPrompt(JSON.stringify(tokenData), walletInfo),
       });
 
-      console.log("Analysis Prompt", analysisPrompt(JSON.stringify(tokenData)));
-      console.log("Analysis Context", analysisContext);
+      // console.log(
+      //   "Analysis Prompt",
+      //   analysisPrompt(JSON.stringify(tokenData), walletInfo)
+      // );
+      // console.log("Analysis Context", analysisContext);
 
       // Generate analysis using the prompt
       const analysisResult = await generateText({

@@ -48,15 +48,20 @@ export async function startChat(characters, isAutomated = false) {
     const agentId = characters[0].name ?? "Agent";
     if (isAutomated) {
       // const tokenDataSummary = [];
-      const promptCoinType = `Analyze tokens data and provide a trading recommendation.`;
+      const promptCoinType = `call analysis token action and show what we have, for the token analysis, we have market data and provide a trading recommendation.`;
       const aiAgentOutputData = await handleUserInput(promptCoinType, agentId);
       console.log("ai agent output data:", aiAgentOutputData);
       //tokenDataSummary.push(aiAgentOutputData);
+      const tokenDataSummaryString = JSON.stringify(aiAgentOutputData);
+      // TODO:: need to check if wallet balance have enough money to swap
+      // if not start analysis of portfolio
+      // if yes swap token
+      // if yes, then if wallet balance don't have this token, then buy it
+      // if yes, then if wallet balance have this token, then sell it
 
-      //const tokenDataSummaryString = JSON.stringify(tokenDataSummary);
-      //console.log("\n\n\ntokenDataSummary:", tokenDataSummaryString);
-      console.log("Sleeping for 5 minutes");
-      setTimeout(chat, 5 * 60 * 1000); // 5 minutes
+      console.log("\n\n\ntokenDataSummary:", tokenDataSummaryString);
+      console.log("Sleeping for 2 minutes");
+      setTimeout(chat, 1 * 60 * 1000); // 5 minutes
     } else {
       rl.question("You: ", async (input) => {
         await handleUserInput(input, agentId);

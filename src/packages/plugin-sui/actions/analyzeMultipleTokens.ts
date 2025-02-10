@@ -114,8 +114,8 @@ export default {
         template: analysisPrompt(JSON.stringify(tokenData)),
       });
 
-      console.log("Analysis Prompt", analysisPrompt(JSON.stringify(tokenData)));
-      console.log("Analysis Context", analysisContext);
+      //console.log("Analysis Prompt", analysisPrompt(JSON.stringify(tokenData)));
+      //console.log("Analysis Context", analysisContext);
 
       // Generate analysis using the prompt
       const analysisResult = await generateText({

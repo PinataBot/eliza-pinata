@@ -49,7 +49,7 @@ interface Prices {
   }>;
 }
 
-const cacheTimeSeconds = 30;
+const cacheTimeSeconds = 300; // 5 minutes
 
 export class WalletProvider {
   private cache: NodeCache;
@@ -58,14 +58,14 @@ export class WalletProvider {
   constructor(
     private suiClient: SuiClient,
     private address: string,
-    private cacheManager: ICacheManager
+    private cacheManager: ICacheManager,
   ) {
     this.cache = new NodeCache({ stdTTL: cacheTimeSeconds }); // Cache TTL set to 5 minutes
   }
 
   private async readFromCache<T>(key: string): Promise<T | null> {
     const cached = await this.cacheManager.get<T>(
-      path.join(this.cacheKey, key)
+      path.join(this.cacheKey, key),
     );
     return cached;
   }
@@ -231,7 +231,7 @@ export class WalletProvider {
         (error) => {
           console.error("Error fetching SUI price:", error);
           throw error;
-        }
+        },
       );
       const suiUsdPrice = (1 / suiPriceData.pair.priceNative).toString();
 
@@ -259,7 +259,7 @@ export class WalletProvider {
           .map((tokenData: FilteredCoinInfo) => {
             // Find the matching token from the filtered tokens array
             const filteredToken = filteredTokens.find(
-              (token) => token.coinType === tokenData.metadata.coinType
+              (token) => token.coinType === tokenData.metadata.coinType,
             );
             if (!filteredToken) return null; // Skip if no matching token is found
 
@@ -269,7 +269,7 @@ export class WalletProvider {
             const factor = new BigNumber(10).pow(decimals);
             // Convert the raw balance into a true human-readable balance
             const trueBalance = new BigNumber(
-              filteredToken.totalBalance
+              filteredToken.totalBalance,
             ).dividedBy(factor);
 
             // Use coinPrice from tokenData. If missing, default to 0.
@@ -325,7 +325,7 @@ export class WalletProvider {
 
     // Calculate and append total portfolio value
     const totalPortfolioValue = new BigNumber(portfolio.totalUsd).plus(
-      totalTokenValue
+      totalTokenValue,
     );
     output += `\nTotal Portfolio Value: $${totalPortfolioValue.toFixed(2)}\n`;
     output += `Total SUI Value: $${totalUsdFormatted}\n`;
@@ -350,7 +350,7 @@ const walletProvider: Provider = {
   get: async (
     runtime: IAgentRuntime,
     _message: Memory,
-    _state?: State
+    _state?: State,
   ): Promise<string | null> => {
     const suiAccount = parseAccount(runtime);
 
@@ -361,7 +361,7 @@ const walletProvider: Provider = {
       const provider = new WalletProvider(
         suiClient,
         suiAccount.toSuiAddress(),
-        runtime.cacheManager
+        runtime.cacheManager,
       );
 
       // console.log(_message)

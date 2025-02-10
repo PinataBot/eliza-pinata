@@ -30,7 +30,7 @@ async function handleUserInput(input, agentId) {
           userId: "user",
           userName: "User",
         }),
-      }
+      },
     );
 
     const data = await response.json();
@@ -42,14 +42,14 @@ async function handleUserInput(input, agentId) {
   }
 }
 
-const CONFIDENCE_THRESHOLD = 65;
+const CONFIDENCE_THRESHOLD = 80;
 const REPEAT_PROMT_EVERY_MIN = 2;
 
 export async function startChat(characters, isAutomated = false) {
   async function chat() {
     const agentId = characters[0].name ?? "Agent";
     if (isAutomated) {
-      automatedChat(agentId);
+      automatedChat(agentId).catch(console.error);
     } else {
       manualChat(agentId);
     }
@@ -60,7 +60,7 @@ export async function startChat(characters, isAutomated = false) {
    */
   async function automatedChat(agentId: string) {
     // 1. First AI call: Analyze tokens
-    const promptCoinType = `Analyze tokens and provide info what to do with them`;
+    const promptCoinType = `Decide what action to call. You can call ANALYZE_TRADE or PORTFOLIO_ANALYSIS. Based on recent messages, choose the action to call.`;
     const aiAgentOutputData = await handleUserInput(promptCoinType, agentId);
 
     if (!aiAgentOutputData || aiAgentOutputData.length <= 1) {
@@ -72,15 +72,19 @@ export async function startChat(characters, isAutomated = false) {
     const firstAction = aiAgentOutputData[0]?.action;
 
     // 2. Handle different actions from the AI agent
+    console.log("firstAction:", firstAction);
+    console.log("resultData:", resultData);
     if (
       firstAction === "ANALYZE_TRADE" &&
       resultData.recommendation !== "HOLD"
     ) {
+      console.log("Handling analyze trade");
       await handleAnalyzeTrade(resultData, agentId);
     } else if (
       firstAction === "PORTFOLIO_ANALYSIS" &&
       resultData.recommendation !== "HOLD"
     ) {
+      console.log("Handling portfolio analysis");
       await handlePortfolioAnalysis(resultData, agentId);
     }
 
@@ -109,17 +113,17 @@ export async function startChat(characters, isAutomated = false) {
    */
   async function handleAnalyzeTrade(
     resultData: AnalysisContent,
-    agentId: string
+    agentId: string,
   ) {
     if (resultData.confidence > CONFIDENCE_THRESHOLD) {
       // 2a. Check portfolio if confidence is high
       const promptPortfolio = `Check portfolio, provide info what to do with new coin data: ${JSON.stringify(
-        resultData
+        resultData,
       )}, call action: ANALYZE_PORTFOLIO`;
 
       const aiAgentOutputDataPortfolio = await handleUserInput(
         promptPortfolio,
-        agentId
+        agentId,
       );
       console.log("aiAgentOutputDataPortfolio:", aiAgentOutputDataPortfolio);
 
@@ -127,7 +131,7 @@ export async function startChat(characters, isAutomated = false) {
         return;
 
       const resultPortfolio = JSON.parse(
-        aiAgentOutputDataPortfolio[1].text
+        aiAgentOutputDataPortfolio[1].text,
       ) as AnalysisContent;
       const portfolioAction = aiAgentOutputDataPortfolio[0]?.action;
 
@@ -136,14 +140,14 @@ export async function startChat(characters, isAutomated = false) {
         portfolioAction === "PORTFOLIO_ANALYSIS" &&
         resultPortfolio.recommendation !== "HOLD"
       ) {
-        const promptSwap = `make a swap of your portfolio from coinType: ${resultPortfolio.nextAction?.fromCoinType} to destination coinType: ${resultPortfolio.nextAction?.toCoinType}, amount to swap: ${resultPortfolio.amount}`;
+        const promptSwap = `make a swap of your portfolio from coinType: ${resultData.nextAction?.fromCoinType} to destination coinType: ${resultData.nextAction?.toCoinType}, amount to swap: ${resultData.amount}`;
         const aiAgentOutputDataSwap = await handleUserInput(
           promptSwap,
-          agentId
+          agentId,
         );
         console.log(
           "aiAgentOutputDataSwap after tokens analysis:",
-          aiAgentOutputDataSwap
+          aiAgentOutputDataSwap,
         );
       }
     }
@@ -154,7 +158,7 @@ export async function startChat(characters, isAutomated = false) {
    */
   async function handlePortfolioAnalysis(
     resultData: AnalysisContent,
-    agentId: string
+    agentId: string,
   ) {
     if (resultData.confidence > CONFIDENCE_THRESHOLD) {
       // Swap if confidence is high and recommendation isn’t "HOLD"
@@ -162,7 +166,7 @@ export async function startChat(characters, isAutomated = false) {
       const aiAgentOutputDataSwap = await handleUserInput(promptSwap, agentId);
       console.log(
         "aiAgentOutputDataSwap after portfolio analysis:",
-        aiAgentOutputDataSwap
+        aiAgentOutputDataSwap,
       );
     }
   }

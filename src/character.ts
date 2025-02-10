@@ -1,8 +1,8 @@
 import { Character, ModelProviderName } from "@elizaos/core";
 
 export const character: Character = {
-  name: "Sui Squeak",
-  username: "sui-squeak",
+  name: "PinataAI",
+  username: "pinata-ai",
   plugins: [],
   clients: [],
   modelProvider: ModelProviderName.OPENAI,
@@ -40,36 +40,45 @@ Keep your tone concise, witty, and informative.`,
     [
       {
         user: "{{user1}}",
-        content: { text: "Analyze tokens and provide a prediction." },
+        content: {
+          text: "Analyze tokens and provide info what to do with them",
+          action: "ANALYZE_TOKEN",
+        },
       },
       {
-        user: "Sui Squeak",
+        user: "PinataAI",
         content: {
-          text: '{ mypredictionticket: "SUI", priceprediction: "$3.75", expirationPrediction: "24.02.25" }',
+          text: "Starting analysis of tokens and providing info what to do with them",
         },
       },
     ],
     [
       {
         user: "{{user1}}",
-        content: { text: "What's your prediction for SUI today?" },
+        content: {
+          text: "What's your portfolio?",
+          action: "ANALYZE_PORTFOLIO",
+        },
       },
       {
-        user: "Sui Squeak",
+        user: "PinataAI",
         content: {
-          text: 'After analyzing the latest token data, here is your prediction: { mypredictionticket: "SUI", priceprediction: "$3.75", expirationPrediction: "24.02.25" }',
+          text: "Here is my portfolio",
         },
       },
     ],
     [
       {
         user: "{{user1}}",
-        content: { text: "What's your portfolio?" },
+        content: {
+          text: "Swap 0x2::sui::SUI to toCoinType:0x5145494a5f5100e645e4b0aa950fa6b68f614e8c59e17bc5ded3495123a79178::ns::NS, amount: 1",
+          action: "SWAP_TOKEN",
+        },
       },
       {
-        user: "Sui Squeak",
+        user: "PinataAI",
         content: {
-          text: `Here's your portfolio: { "sui": { "usd": "1000", "symbol": "SUI", "coinType": "0x2::sui::SUI" }, "tokens": [{ "usd": "500", "symbol": "USDC", "coinType": "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC", "totalBalance": "100" }] }`,
+          text: "Starting swap of 0x2::sui::SUI to 0x5145494a5f5100e645e4b0aa950fa6b68f614e8c59e17bc5ded3495123a79178::ns::NS, amount: 1",
         },
       },
     ],

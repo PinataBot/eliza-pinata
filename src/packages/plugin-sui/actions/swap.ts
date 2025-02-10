@@ -63,12 +63,19 @@ Respond with a JSON markdown block containing only the extracted values.`;
 
 export default {
   name: "SWAP_TOKEN",
-  similes: ["SWAP_TOKENS", "SWAP_SUI", "SWAP"],
+  similes: [
+    "SWAP_TOKENS",
+    "SWAP_SUI",
+    "SWAP",
+    "MAKE_SWAP",
+    "SWAP_FROM_ONE_COIN_TYPE_TO_ANOTHER",
+  ],
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     console.log("Validating sui swap from user:", message.userId);
     return true;
   },
-  description: "Swap from any token in the agent's wallet to another token",
+  description:
+    "Swap from any coin type in the agent's wallet to another coin type",
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,

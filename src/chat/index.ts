@@ -20,7 +20,6 @@ async function handleUserInput(input, agentId) {
 
   try {
     const serverPort = parseInt(settings.SERVER_PORT || "3000");
-
     const response = await fetch(
       `http://localhost:${serverPort}/${agentId}/message`,
       {
@@ -47,11 +46,9 @@ export async function startChat(characters, isAutomated = false) {
   async function chat() {
     const agentId = characters[0].name ?? "Agent";
     if (isAutomated) {
-      // const tokenDataSummary = [];
-      const promptCoinType = `call analysis token action and show what we have, for the token analysis, we have market data and provide a trading recommendation.`;
+      const promptCoinType = `Analyze tokens and provide info what to do with them`;
       const aiAgentOutputData = await handleUserInput(promptCoinType, agentId);
       console.log("ai agent output data:", aiAgentOutputData);
-      //tokenDataSummary.push(aiAgentOutputData);
       const tokenDataSummaryString = JSON.stringify(aiAgentOutputData);
       // TODO:: need to check if wallet balance have enough money to swap
       // if not start analysis of portfolio

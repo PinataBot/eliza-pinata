@@ -42,8 +42,8 @@ async function handleUserInput(input, agentId) {
   }
 }
 
-const CONFIDENCE_THRESHOLD = 80;
-const REPEAT_PROMT_EVERY_MIN = 2;
+const CONFIDENCE_THRESHOLD = 75;
+const REPEAT_PROMT_EVERY_MIN = 3;
 
 export async function startChat(characters, isAutomated = false) {
   async function chat() {

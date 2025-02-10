@@ -1,7 +1,8 @@
 import { WalrusPutResponse } from "../types/walrusTypes.ts";
 import { BlobItemType } from "../../adapter-supabase/types.ts";
-import { IAgentRuntime } from "@elizaos/core";
+import { IAgentRuntime, ServiceType } from "@elizaos/core";
 import { SupabaseDatabaseAdapter } from "../../adapter-supabase/src";
+import { SuiService } from "../services/sui.ts";
 
 const PUBLISHER_URL = "https://publisher.walrus-testnet.walrus.space";
 
@@ -47,16 +48,23 @@ export async function putBlob(data: string): Promise<{
 export async function putBlobAndSave(
   runtime: IAgentRuntime,
   data: string,
-  type: BlobItemType
+  type: BlobItemType,
 ) {
   try {
     const { blobId, blobObjectId } = await putBlob(data);
+
+    // save to db
     await (runtime.databaseAdapter as SupabaseDatabaseAdapter).createBlob({
       blobId,
       blobObjectId,
       content: data,
       type: type,
     });
+
+    //add to nft
+    await runtime
+      .getService<SuiService>(ServiceType.TRANSCRIPTION)
+      .addBlobToNft(blobId, type);
   } catch (error) {
     // TODO::add retry logic
     console.error("Can't put blob and save:", error);

@@ -32,7 +32,8 @@ public struct Agent has key, store {
     id: UID,
     character: Character,
     image_url: Url,
-    blobs: TableVec<String>,
+    response_blobs: TableVec<String>,
+    action_blobs: TableVec<String>,
 }
 
 // ========================= INIT =========================
@@ -93,7 +94,8 @@ public fun new(
         id: object::new(ctx),
         character: character,
         image_url: url::new_unsafe_from_bytes(image_url),
-        blobs: table_vec::empty(ctx),
+        response_blobs: table_vec::empty(ctx),
+        action_blobs: table_vec::empty(ctx),
     };
 
     transfer::transfer(agent, recipient);
@@ -123,7 +125,8 @@ public fun new_without_character(
             adjectives: b"".to_string(),
         },
         image_url: url::new_unsafe_from_bytes(image_url),
-        blobs: table_vec::empty(ctx),
+        response_blobs: table_vec::empty(ctx),
+        action_blobs: table_vec::empty(ctx),
     };
 
     transfer::transfer(agent, recipient);
@@ -227,11 +230,16 @@ public fun update_image_url(agent: &mut Agent, image_url: vector<u8>, _ctx: &mut
     agent.image_url = url::new_unsafe_from_bytes(image_url);
 }
 
-public fun add_blob(agent: &mut Agent, blob: vector<u8>, _ctx: &mut TxContext) {
-    agent.blobs.push_back(blob.to_string());
+public fun add_response_blob(agent: &mut Agent, blob: vector<u8>, _ctx: &mut TxContext) {
+    agent.response_blobs.push_back(blob.to_string());
+}
+
+public fun add_action_blob(agent: &mut Agent, blob: vector<u8>, _ctx: &mut TxContext) {
+    agent.action_blobs.push_back(blob.to_string());
 }
 
 // ========================= PRIVATE FUNCTIONS =========================
+
 fun assert_admin(cap: &Publisher) {
     assert!(cap.from_module<AGENT>(), ENotAuthorized);
 }

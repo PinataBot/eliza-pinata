@@ -17,6 +17,7 @@ import {
 import { AGENT_OBJECT_ID, PACKAGE_API, PACKAGE_ID } from "../utils/contract.ts";
 import { FilteredCoinMetadata } from "../types/tokenMarketDataTypes.ts";
 import { SUI_TYPE_ARG } from "@mysten/sui/utils";
+import { BlobItemType } from "../../adapter-supabase/types.ts";
 
 const aggregatorURL = "https://api-sui.cetus.zone/router_v2/find_routes";
 
@@ -142,6 +143,8 @@ export class SuiService extends Service {
     let coin: TransactionObjectArgument;
     const routerTx = new Transaction();
 
+    console.log("Amount -------", amount);
+    console.log(fromCoinType.toUpperCase() === SUI_TYPE_ARG.toUpperCase());
     if (fromCoinType.toUpperCase() === SUI_TYPE_ARG.toUpperCase()) {
       coin = routerTx.splitCoins(routerTx.gas, [amount]);
     } else {
@@ -225,12 +228,13 @@ export class SuiService extends Service {
   /**
    * Add blob. Update NFT table with blobId
    * @param blobId
+   * @param blobType
    */
-  async addBlobToNft(blobId: string): Promise<string> {
+  async addBlobToNft(blobId: string, blobType: BlobItemType): Promise<string> {
     console.log("Sui move call addBlob");
     const tx = new Transaction();
     tx.moveCall({
-      target: `${PACKAGE_ID}::${PACKAGE_API.ADD_BLOB}`,
+      target: `${PACKAGE_ID}::${blobType == "response" ? PACKAGE_API.ADD_RESPONSE_BLOB : PACKAGE_API.ADD_ACTION_BLOB}`,
       arguments: [tx.object(AGENT_OBJECT_ID), tx.pure.string(blobId)],
     });
 
@@ -245,6 +249,7 @@ export class SuiService extends Service {
       digest: result.digest,
     });
 
+    console.log(`Blob ${blobType} added to NFT:`, result.digest);
     return result.digest;
   }
 }

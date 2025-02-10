@@ -42,6 +42,9 @@ async function handleUserInput(input, agentId) {
   }
 }
 
+const CONFIDENCE_THRESHOLD = 65;
+const REPEAT_PROMT_EVERY_MIN = 2;
+
 export async function startChat(characters, isAutomated = false) {
   async function chat() {
     const agentId = characters[0].name ?? "Agent";
@@ -82,9 +85,8 @@ export async function startChat(characters, isAutomated = false) {
     }
 
     // 3. Schedule next automated run
-    const minutes = 2;
-    console.log(`Sleeping for ${minutes} minutes`);
-    setTimeout(chat, minutes * 60 * 1000);
+    console.log(`Sleeping for ${REPEAT_PROMT_EVERY_MIN} minutes`);
+    setTimeout(chat, REPEAT_PROMT_EVERY_MIN * 60 * 1000);
   }
 
   /**
@@ -109,7 +111,7 @@ export async function startChat(characters, isAutomated = false) {
     resultData: AnalysisContent,
     agentId: string
   ) {
-    if (resultData.confidence > 80) {
+    if (resultData.confidence > CONFIDENCE_THRESHOLD) {
       // 2a. Check portfolio if confidence is high
       const promptPortfolio = `Check portfolio, provide info what to do with new coin data: ${JSON.stringify(
         resultData
@@ -148,13 +150,13 @@ export async function startChat(characters, isAutomated = false) {
   }
 
   /**
-   * Handles logic when the AI agent's action is "PORTFOLIO_ANALYSIS".
+   * Handles logic when the AI agent's after portfolio analysis action is "PORTFOLIO_ANALYSIS".
    */
   async function handlePortfolioAnalysis(
     resultData: AnalysisContent,
     agentId: string
   ) {
-    if (resultData.confidence > 80) {
+    if (resultData.confidence > CONFIDENCE_THRESHOLD) {
       // Swap if confidence is high and recommendation isn’t "HOLD"
       const promptSwap = `make a swap of your portfolio from coinType: ${resultData.nextAction?.fromCoinType} to destination coinType: ${resultData.nextAction?.toCoinType}, amount to swap: ${resultData.amount}`;
       const aiAgentOutputDataSwap = await handleUserInput(promptSwap, agentId);

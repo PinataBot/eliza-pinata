@@ -24,6 +24,7 @@ import {
 } from "./config/index.ts";
 import { initializeDatabase } from "./database/index.ts";
 import suiPlugin from "./packages/plugin-sui/index.ts";
+import { getTokenMetadata } from "./packages/plugin-sui/tokens.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,12 +45,12 @@ export function createAgent(
   character: Character,
   db: any,
   cache: any,
-  token: string
+  token: string,
 ) {
   elizaLogger.success(
     elizaLogger.successesTitle,
     "Creating runtime for character",
-    character.name
+    character.name,
   );
 
   nodePlugin ??= createNodePlugin();
@@ -105,7 +106,7 @@ async function startAgent(character: Character, directClient: DirectClient) {
   } catch (error) {
     elizaLogger.error(
       `Error starting agent for character ${character.name}:`,
-      error
+      error,
     );
     console.error(error);
     throw error;

@@ -1,6 +1,7 @@
 import { SUI_DECIMALS, SUI_TYPE_ARG } from "@mysten/sui/utils";
 import { fetchTokenData } from "./utils/fetchTokensData.ts";
 import { FilteredCoinMetadata } from "./types/tokenMarketDataTypes.ts";
+import { loadWhitelistTokens } from "./utils/loadWhitelistTokens.ts";
 
 export interface TokenMetadata {
   symbol: string;
@@ -26,7 +27,7 @@ export const getSuiMetadata = (): FilteredCoinMetadata => {
 
 // TODO::refactor this to universal function
 export const getTokenMetadata = async (
-  coinType: string
+  coinType: string,
 ): Promise<FilteredCoinMetadata> => {
   if (
     coinType === "0x2::sui::SUI" ||
@@ -36,11 +37,31 @@ export const getTokenMetadata = async (
   ) {
     return getSuiMetadata();
   }
-  const data = await fetchTokenData(coinType);
+
+  const data = await fetchTokenData(getCoinTypeByName(coinType));
   return data[0].metadata;
 };
 
 export const getAmount = (amount: string, meta: TokenMetadata) => {
   const v = parseFloat(amount);
   return BigInt(v * 10 ** meta.decimals);
+};
+
+const whitelistTokensAliases = new Map<string, string>();
+/**
+ * Get coin type by name/alias or return the same name if not found
+ * @param name
+ */
+const getCoinTypeByName = (name: string) => {
+  if (whitelistTokensAliases.size === 0) {
+    for (const ct of loadWhitelistTokens()) {
+      const coinName = ct.split("::")[2];
+      whitelistTokensAliases.set(coinName, ct);
+    }
+  }
+
+  if (whitelistTokensAliases.has(name)) {
+    return whitelistTokensAliases.get(name);
+  }
+  return name;
 };

@@ -144,7 +144,6 @@ export class SuiService extends Service {
     const routerTx = new Transaction();
 
     console.log("Amount -------", amount);
-    console.log(fromCoinType.toUpperCase() === SUI_TYPE_ARG.toUpperCase());
     if (fromCoinType.toUpperCase() === SUI_TYPE_ARG.toUpperCase()) {
       coin = routerTx.splitCoins(routerTx.gas, [amount]);
     } else {
@@ -165,15 +164,15 @@ export class SuiService extends Service {
         };
       }
 
-      const mergeCoins = [];
-
-      for (let i = 1; i < allCoins.data.length; i++) {
-        //elizaLogger.info("Coin:", allCoins.data[i]);
-        mergeCoins.push(allCoins.data[i].coinObjectId);
+      if (allCoins.data.length > 1) {
+        const mergeCoins = [];
+        for (let i = 1; i < allCoins.data.length; i++) {
+          //elizaLogger.info("Coin:", allCoins.data[i]);
+          mergeCoins.push(allCoins.data[i].coinObjectId);
+        }
+        routerTx.mergeCoins(allCoins.data[0].coinObjectId, mergeCoins);
       }
       //elizaLogger.info("Merge coins:", mergeCoins);
-
-      routerTx.mergeCoins(allCoins.data[0].coinObjectId, mergeCoins);
       coin = routerTx.splitCoins(allCoins.data[0].coinObjectId, [amount]);
     }
 
@@ -186,7 +185,6 @@ export class SuiService extends Service {
     });
 
     // checking threshold
-
     // routerTx.moveCall({
     //     package:
     //         "0x57d4f00af225c487fd21eed6ee0d11510d04347ee209d2ab48d766e48973b1a4",
@@ -198,6 +196,7 @@ export class SuiService extends Service {
     //     ],
     //     typeArguments: [otherType],
     // });
+
     routerTx.setGasBudget(100_000_000); // 0.1 SUI
     routerTx.transferObjects([targetCoin], this.wallet.toSuiAddress());
     routerTx.setSender(this.wallet.toSuiAddress());

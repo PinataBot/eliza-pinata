@@ -46,33 +46,122 @@ export async function startChat(characters, isAutomated = false) {
   async function chat() {
     const agentId = characters[0].name ?? "Agent";
     if (isAutomated) {
-      const promptCoinType = `Analyze tokens and provide info what to do with them, call action: ANALYZE_TRADE`;
-      const aiAgentOutputData = await handleUserInput(promptCoinType, agentId);
-      if (
-        aiAgentOutputData &&
-        aiAgentOutputData.length > 1 &&
-        aiAgentOutputData[0]?.action === "ANALYZE_TRADE" &&
-        aiAgentOutputData[1]?.recommendation !== "HOLD"
-      ) {
-        // TODO:: check if confidence is high enough >80%
-        const secondText = JSON.parse(
-          aiAgentOutputData[1].text
-        ) as AnalysisContent;
-        console.log("secondText:", secondText);
-        const promtSwap = `Forget all actions instructions(don't call ANALAZE_TRADE), call only action: SWAP_TOKEN, make a swap from coinType: ${secondText.nextAction.fromCoinType} to destination coinType: ${secondText.nextAction.toCoinType}, amount to swap: ${secondText.amount}`;
-        console.log("promtSwap:", promtSwap);
-        const aiAgentOutputDataSwap = await handleUserInput(promtSwap, agentId);
-        console.log("aiAgentOutputDataSwap:", aiAgentOutputDataSwap);
-      }
-      console.log("Sleeping for 2 minutes");
-      setTimeout(chat, 3 * 60 * 1000); // 5 minutes
+      automatedChat(agentId);
     } else {
-      rl.question("You: ", async (input) => {
-        await handleUserInput(input, agentId);
-        if (input.toLowerCase() !== "exit") {
-          chat(); // Loop back to ask another question
-        }
-      });
+      manualChat(agentId);
+    }
+  }
+
+  /**
+   * Runs the chat in automated mode by calling the AI agent repeatedly.
+   */
+  async function automatedChat(agentId: string) {
+    // 1. First AI call: Analyze tokens
+    const promptCoinType = `Analyze tokens and provide info what to do with them`;
+    const aiAgentOutputData = await handleUserInput(promptCoinType, agentId);
+
+    if (!aiAgentOutputData || aiAgentOutputData.length <= 1) {
+      console.log("No data from agent");
+      return;
+    }
+
+    const resultData = JSON.parse(aiAgentOutputData[1].text) as AnalysisContent;
+    const firstAction = aiAgentOutputData[0]?.action;
+
+    // 2. Handle different actions from the AI agent
+    if (
+      firstAction === "ANALYZE_TRADE" &&
+      resultData.recommendation !== "HOLD"
+    ) {
+      await handleAnalyzeTrade(resultData, agentId);
+    } else if (
+      firstAction === "PORTFOLIO_ANALYSIS" &&
+      resultData.recommendation !== "HOLD"
+    ) {
+      await handlePortfolioAnalysis(resultData, agentId);
+    }
+
+    // 3. Schedule next automated run
+    const minutes = 2;
+    console.log(`Sleeping for ${minutes} minutes`);
+    setTimeout(chat, minutes * 60 * 1000);
+  }
+
+  /**
+   * Runs the chat in manual (interactive) mode.
+   */
+  function manualChat(agentId: string) {
+    rl.question("You: ", async (input) => {
+      // Send user input to AI agent
+      await handleUserInput(input, agentId);
+
+      // Continue unless user types "exit"
+      if (input.toLowerCase() !== "exit") {
+        manualChat(agentId);
+      }
+    });
+  }
+
+  /**
+   * Handles logic when the AI agent's first action is "ANALYZE_TRADE".
+   */
+  async function handleAnalyzeTrade(
+    resultData: AnalysisContent,
+    agentId: string
+  ) {
+    if (resultData.confidence > 80) {
+      // 2a. Check portfolio if confidence is high
+      const promptPortfolio = `Check portfolio, provide info what to do with new coin data: ${JSON.stringify(
+        resultData
+      )}, call action: ANALYZE_PORTFOLIO`;
+
+      const aiAgentOutputDataPortfolio = await handleUserInput(
+        promptPortfolio,
+        agentId
+      );
+      console.log("aiAgentOutputDataPortfolio:", aiAgentOutputDataPortfolio);
+
+      if (!aiAgentOutputDataPortfolio || aiAgentOutputDataPortfolio.length <= 1)
+        return;
+
+      const resultPortfolio = JSON.parse(
+        aiAgentOutputDataPortfolio[1].text
+      ) as AnalysisContent;
+      const portfolioAction = aiAgentOutputDataPortfolio[0]?.action;
+
+      // 2b. If we get a "PORTFOLIO_ANALYSIS" action and it's not "HOLD", then swap
+      if (
+        portfolioAction === "PORTFOLIO_ANALYSIS" &&
+        resultPortfolio.recommendation !== "HOLD"
+      ) {
+        const promptSwap = `make a swap of your portfolio from coinType: ${resultPortfolio.nextAction?.fromCoinType} to destination coinType: ${resultPortfolio.nextAction?.toCoinType}, amount to swap: ${resultPortfolio.amount}`;
+        const aiAgentOutputDataSwap = await handleUserInput(
+          promptSwap,
+          agentId
+        );
+        console.log(
+          "aiAgentOutputDataSwap after tokens analysis:",
+          aiAgentOutputDataSwap
+        );
+      }
+    }
+  }
+
+  /**
+   * Handles logic when the AI agent's action is "PORTFOLIO_ANALYSIS".
+   */
+  async function handlePortfolioAnalysis(
+    resultData: AnalysisContent,
+    agentId: string
+  ) {
+    if (resultData.confidence > 80) {
+      // Swap if confidence is high and recommendation isn’t "HOLD"
+      const promptSwap = `make a swap of your portfolio from coinType: ${resultData.nextAction?.fromCoinType} to destination coinType: ${resultData.nextAction?.toCoinType}, amount to swap: ${resultData.amount}`;
+      const aiAgentOutputDataSwap = await handleUserInput(promptSwap, agentId);
+      console.log(
+        "aiAgentOutputDataSwap after portfolio analysis:",
+        aiAgentOutputDataSwap
+      );
     }
   }
 

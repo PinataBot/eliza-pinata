@@ -51,7 +51,7 @@ export async function startChat(characters) {
   async function chat() {
     const agentId = characters[0].name ?? "Agent";
     if (IS_AUTOMATED) {
-      automatedChat(agentId).catch(console.error);
+      automatedChat(agentId);
     } else {
       manualChat(agentId);
     }
@@ -61,38 +61,44 @@ export async function startChat(characters) {
    * Runs the chat in automated mode by calling the AI agent repeatedly.
    */
   async function automatedChat(agentId: string) {
-    // 1. First AI call: Analyze tokens
-    const promptCoinType = `Decide what action to call. You can call ANALYZE_TRADE or PORTFOLIO_ANALYSIS. Based on recent messages, choose the action to call.`;
-    const aiAgentOutputData = await handleUserInput(promptCoinType, agentId);
+    try {
+      // 1. First AI call: Analyze tokens
+      const promptCoinType = `Decide what action to call. You can call ANALYZE_TRADE or PORTFOLIO_ANALYSIS. Based on recent messages, choose the action to call.`;
+      const aiAgentOutputData = await handleUserInput(promptCoinType, agentId);
 
-    if (!aiAgentOutputData || aiAgentOutputData.length <= 1) {
-      console.log("No data from agent");
-      return;
+      if (!aiAgentOutputData || aiAgentOutputData.length <= 1) {
+        console.log("No data from agent");
+        return;
+      }
+
+      const resultData = JSON.parse(
+        aiAgentOutputData[1].text,
+      ) as AnalysisContent;
+      const firstAction = aiAgentOutputData[0]?.action;
+
+      // 2. Handle different actions from the AI agent
+      console.log("firstAction:", firstAction);
+      console.log("resultData:", resultData);
+      if (
+        firstAction === "ANALYZE_TRADE" &&
+        resultData.recommendation !== "HOLD"
+      ) {
+        console.log("Handling analyze trade");
+        await handleAnalyzeTrade(resultData, agentId);
+      } else if (
+        firstAction === "PORTFOLIO_ANALYSIS" &&
+        resultData.recommendation !== "HOLD"
+      ) {
+        console.log("Handling portfolio analysis");
+        await handlePortfolioAnalysis(resultData, agentId);
+      }
+    } catch (error) {
+      console.error("Error in automated chat:", error);
+    } finally {
+      // 3. Schedule next automated run
+      console.log(`Sleeping for ${REPEAT_PROMT_EVERY_MIN} minutes`);
+      setTimeout(chat, REPEAT_PROMT_EVERY_MIN * 60 * 1000);
     }
-
-    const resultData = JSON.parse(aiAgentOutputData[1].text) as AnalysisContent;
-    const firstAction = aiAgentOutputData[0]?.action;
-
-    // 2. Handle different actions from the AI agent
-    console.log("firstAction:", firstAction);
-    console.log("resultData:", resultData);
-    if (
-      firstAction === "ANALYZE_TRADE" &&
-      resultData.recommendation !== "HOLD"
-    ) {
-      console.log("Handling analyze trade");
-      await handleAnalyzeTrade(resultData, agentId);
-    } else if (
-      firstAction === "PORTFOLIO_ANALYSIS" &&
-      resultData.recommendation !== "HOLD"
-    ) {
-      console.log("Handling portfolio analysis");
-      await handlePortfolioAnalysis(resultData, agentId);
-    }
-
-    // 3. Schedule next automated run
-    console.log(`Sleeping for ${REPEAT_PROMT_EVERY_MIN} minutes`);
-    setTimeout(chat, REPEAT_PROMT_EVERY_MIN * 60 * 1000);
   }
 
   /**

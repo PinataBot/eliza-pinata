@@ -11,6 +11,7 @@ import {
   HandlerCallback,
   Content,
   ServiceType,
+  UUID,
 } from "@elizaos/core";
 import { z } from "zod";
 import { SuiService } from "../services/sui.ts";
@@ -19,6 +20,7 @@ import { walletProvider } from "../providers/wallet.ts";
 import { AnalysisContent } from "./tokenAnalysis.ts";
 import { isAnalysisContent } from "./tokenAnalysis.ts";
 import { putBlobAndSave } from "../utils/walrus.ts";
+import { v4 as uuid } from "uuid";
 
 // Compose the prompt to analyze the token data with risk management and swap details
 const portfolioAnalysisPrompt = (walletInfo: any): string => {
@@ -92,11 +94,11 @@ export default {
   examples: [],
   validate: async (
     runtime: IAgentRuntime,
-    message: Memory
+    message: Memory,
   ): Promise<boolean> => {
     elizaLogger.info(
       "Validating PORTFOLIO_ANALYSIS for agent:",
-      message.agentId
+      message.agentId,
     );
     return true;
   },
@@ -105,7 +107,7 @@ export default {
     message: Memory,
     state: State,
     params: any,
-    callback?: HandlerCallback
+    callback?: HandlerCallback,
   ) => {
     try {
       elizaLogger.log("Starting PORTFOLIO_ANALYSIS handler...");
@@ -161,11 +163,14 @@ export default {
         }
         return false;
       }
-      putBlobAndSave(runtime, JSON.stringify(analysisContent), "response").then(
-        () => {
-          console.log("Blob saved");
-        }
-      );
+      putBlobAndSave(
+        runtime,
+        message,
+        JSON.stringify(analysisContent),
+        "response",
+      ).then(() => {
+        console.log("Blob saved");
+      });
       if (callback) {
         await callback({
           text: JSON.stringify(analysisContent),

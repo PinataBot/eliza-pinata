@@ -10,6 +10,7 @@ import {
   Memory,
   generateObject,
   Content,
+  UUID,
 } from "@elizaos/core";
 import { z } from "zod";
 import { fetchTokenData } from "../utils/fetchTokensData.ts";
@@ -17,6 +18,7 @@ import { putBlob, putBlobAndSave } from "../utils/walrus.ts";
 import { SupabaseDatabaseAdapter } from "../../adapter-supabase/src";
 import { loadWhitelistTokens } from "../utils/loadWhitelistTokens.ts";
 import { walletProvider } from "../providers/wallet.ts";
+import { v4 as uuid } from "uuid";
 
 interface CoinTypeTypes extends Content {
   coinType: any;
@@ -38,7 +40,7 @@ export interface AnalysisContent extends Content {
 }
 
 export function isAnalysisContent(
-  content: Content
+  content: Content,
 ): content is AnalysisContent {
   console.log("Content for analysis", content);
   return (
@@ -120,7 +122,7 @@ export default {
   examples: [],
   validate: async (
     runtime: IAgentRuntime,
-    message: Memory
+    message: Memory,
   ): Promise<boolean> => {
     elizaLogger.info("Validating ANALYZE_TRADE for agent:", message.agentId);
     return true;
@@ -185,18 +187,21 @@ export default {
       }
 
       elizaLogger.debug("Raw analysis response:", analysisResult);
-      putBlobAndSave(runtime, JSON.stringify(analysisContent), "response").then(
-        () => {
-          console.log("Blob saved");
-        }
-      );
+      putBlobAndSave(
+        runtime,
+        message,
+        JSON.stringify(analysisContent),
+        "response",
+      ).then(() => {
+        console.log("Blob saved");
+      });
       // Parse the analysis response
       const tradeRecommendation = analysisContent;
       elizaLogger.info(
         `Parsed recommendation for token ${
           tradeRecommendation.coinType || "unknown"
         }:`,
-        tradeRecommendation
+        tradeRecommendation,
       );
 
       if (callback) {

@@ -51,16 +51,6 @@ export class SuiService extends Service {
   }
 
   getAmount(amount: string | number, meta: FilteredCoinMetadata) {
-    console.log("Amount -------", amount);
-    console.log("Meta -------", meta);
-    console.log(
-      "Amount * 10^decimals -------",
-      Number(amount) * Math.pow(10, meta.decimals)
-    );
-    console.log(
-      "BIGINT",
-      BigInt(Number(amount) * Math.pow(10, meta.decimals)).toString()
-    );
     return BigInt(Number(amount) * Math.pow(10, meta.decimals));
   }
 
@@ -152,8 +142,6 @@ export class SuiService extends Service {
     let coin: TransactionObjectArgument;
     const routerTx = new Transaction();
 
-    console.log("Amount -------", amount);
-    console.log(fromCoinType.toUpperCase() === SUI_TYPE_ARG.toUpperCase());
     if (fromCoinType.toUpperCase() === SUI_TYPE_ARG.toUpperCase()) {
       coin = routerTx.splitCoins(routerTx.gas, [amount]);
     } else {

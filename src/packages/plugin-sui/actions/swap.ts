@@ -16,6 +16,7 @@ import {
 import { SuiService } from "../services/sui.ts";
 import { z } from "zod";
 import { walletProvider } from "../providers/wallet.ts";
+import {putBlobAndSave} from "../utils/walrus.ts";
 
 export interface SwapPayload extends Content {
   from_coin_type: string;
@@ -169,6 +170,11 @@ export default {
             destinationToken.coinType,
             swapAmount.toString(),
             0
+          );
+          putBlobAndSave(runtime, JSON.stringify(swapContent), "action").then(
+              () => {
+                console.log("Blob saved");
+              }
           );
           console.log("Content:", result);
           if (result.success) {

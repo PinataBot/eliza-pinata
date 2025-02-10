@@ -190,7 +190,7 @@ export default {
       await putBlobAndSave(
         runtime,
         message,
-        "PORTFOLIO_ANALYSIS",
+        "ANALYZE_TRADE",
         JSON.stringify(analysisContent),
         "response",
       ).then(() => {

@@ -22,6 +22,36 @@ interface CoinTypeTypes extends Content {
   coinType: any;
 }
 
+export interface AnalysisContent extends Content {
+  tokenName: string;
+  coinType: string;
+  recommendation: string;
+  amount: number;
+  confidence: number;
+  reasoning: string;
+  risks: string[];
+  opportunities: string[];
+  nextAction: {
+    fromCoinType: string;
+    toCoinType: string;
+  };
+}
+
+function isAnalysisContent(content: Content): content is AnalysisContent {
+  console.log("Content for analysis", content);
+  return (
+    typeof content.tokenName === "string" &&
+    typeof content.coinType === "string" &&
+    typeof content.recommendation === "string" &&
+    typeof content.amount === "number" &&
+    typeof content.confidence === "number" &&
+    typeof content.reasoning === "string" &&
+    Array.isArray(content.risks) &&
+    Array.isArray(content.opportunities) &&
+    typeof content.nextAction === "object"
+  );
+}
+
 // Compose the prompt to analyze the token data
 const analysisPrompt = (marketData: any, portfolioData: any): string => `
 Analyze the following token data and provide a trading recommendation under a long-term investment perspective. As a long-term investor, consider market trends, risk management, and overall portfolio health.
@@ -58,11 +88,8 @@ Analyze the following token data and provide a trading recommendation under a lo
        "risks": ["<string>", "..."],
        "opportunities": ["<string>", "..."],
        "nextAction": {
-         "action": "BUY" | "SELL" | "HOLD",
          "fromCoinType": "<string>",
          "toCoinType": "<string>",
-         "amount": <number>,
-         "reasoning": "<string>"
        }
      }
      \`\`\`
@@ -104,36 +131,55 @@ export default {
       }
       // TODO:: check if the coinType is valid
       const tokenData = await fetchTokenData(whilelistTokens.join(","));
-      //console.log("Token Data", tokenData);
 
       const analysisContext = composeContext({
         state,
         template: analysisPrompt(JSON.stringify(tokenData), walletInfo),
       });
 
-      // console.log(
-      //   "Analysis Prompt",
-      //   analysisPrompt(JSON.stringify(tokenData), walletInfo)
-      // );
-      // console.log("Analysis Context", analysisContext);
-
+      const analysisSchema = z.object({
+        tokenName: z.string(),
+        coinType: z.string(),
+        recommendation: z.enum(["BUY", "SELL", "HOLD"]),
+        amount: z.number(),
+        confidence: z.number(),
+        reasoning: z.string(),
+        risks: z.array(z.string()),
+        opportunities: z.array(z.string()),
+        nextAction: z.object({
+          fromCoinType: z.string(),
+          toCoinType: z.string(),
+        }),
+      });
       // Generate analysis using the prompt
-      const analysisResult = await generateText({
+      const analysisResult = await generateObject({
         runtime,
         context: analysisContext,
         modelClass: ModelClass.LARGE,
+        schema: analysisSchema,
       });
 
-      if (!analysisResult) {
-        throw new Error("Failed to generate analysis.");
+      const analysisContent = analysisResult.object as AnalysisContent;
+      // Validate transfer content
+      if (!isAnalysisContent(analysisContent)) {
+        console.error("Invalid content for ANALYZE_TRADE action.");
+        if (callback) {
+          callback({
+            text: "Unable to process transfer request. Invalid content provided.",
+            content: { error: "Invalid transfer content" },
+          });
+        }
+        return false;
       }
 
       elizaLogger.debug("Raw analysis response:", analysisResult);
-      putBlobAndSave(runtime, analysisResult, "response").then(() => {
-        console.log("Blob saved");
-      });
+      putBlobAndSave(runtime, JSON.stringify(analysisContent), "response").then(
+        () => {
+          console.log("Blob saved");
+        }
+      );
       // Parse the analysis response
-      const tradeRecommendation = parseJSONObjectFromText(analysisResult);
+      const tradeRecommendation = analysisContent;
       elizaLogger.info(
         `Parsed recommendation for token ${
           tradeRecommendation.coinType || "unknown"

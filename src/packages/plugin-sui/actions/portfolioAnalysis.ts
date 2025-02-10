@@ -163,9 +163,10 @@ export default {
         }
         return false;
       }
-      putBlobAndSave(
+      await putBlobAndSave(
         runtime,
         message,
+        "PORTFOLIO_ANALYSIS",
         JSON.stringify(analysisContent),
         "response",
       ).then(() => {

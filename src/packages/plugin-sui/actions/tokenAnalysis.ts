@@ -187,9 +187,10 @@ export default {
       }
 
       elizaLogger.debug("Raw analysis response:", analysisResult);
-      putBlobAndSave(
+      await putBlobAndSave(
         runtime,
         message,
+        "PORTFOLIO_ANALYSIS",
         JSON.stringify(analysisContent),
         "response",
       ).then(() => {

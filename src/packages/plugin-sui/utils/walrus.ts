@@ -50,6 +50,7 @@ export async function putBlobAndSave(
   runtime: IAgentRuntime,
   // for roomId, agentId, userId
   message: Memory,
+  action:string,
   data: string,
   type: BlobItemType,
 ) {
@@ -62,6 +63,7 @@ export async function putBlobAndSave(
       content: {
         text: data,
         blobId,
+        action
       },
     });
 

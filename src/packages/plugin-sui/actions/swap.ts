@@ -171,9 +171,10 @@ export default {
             swapAmount.toString(),
             0,
           );
-          putBlobAndSave(
+          await putBlobAndSave(
             runtime,
             message,
+            "SWAP_TOKEN",
             JSON.stringify(swapContent),
             "action",
           ).then(() => {

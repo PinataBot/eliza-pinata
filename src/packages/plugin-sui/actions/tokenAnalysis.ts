@@ -37,7 +37,9 @@ export interface AnalysisContent extends Content {
   };
 }
 
-function isAnalysisContent(content: Content): content is AnalysisContent {
+export function isAnalysisContent(
+  content: Content
+): content is AnalysisContent {
   console.log("Content for analysis", content);
   return (
     typeof content.tokenName === "string" &&
@@ -62,6 +64,11 @@ Analyze the following token data and provide a trading recommendation under a lo
    - Diversification is important; be mindful of not overexposing the portfolio to one token unless a BUY decision is strongly supported by analysis.
 
 2. **Decision Making:**
+   - Choose the best trading action for one token from the portfolio. Your decision must be one of:
+     - **BUY**
+     - **SELL**
+     - **HOLD**
+     - **REBALANCE**
    - **HOLD Recommendation:**
      - If the portfolio already holds a sufficient balance of the recommended token or if buying/selling does not offer a clear advantage, recommend HOLD.
    - **BUY Recommendation:**
@@ -71,8 +78,13 @@ Analyze the following token data and provide a trading recommendation under a lo
      - IMPORTANT: Don't invest nearly the entire available SUI balance, reserving approximately 0.1 SUI for transaction fees and do not invest more than 10%-20% of the available SUI balance.
      - The recommended amount should be calculated based on the available SUI balance and the long-term potential of the token.
      - Check portfolio data context to ensure the recommendation is feasible.
+     - One asset can't be more than 50% of the portfolio.
+     - If don't know what to do, recommend HOLD.
+     - WARNING: Check portfolio data context to ensure the recommendation is feasible and always thing about rick managment, don't overinvest in one token.
    - **SELL Recommendation:**
      - If market conditions suggest reducing exposure, recommend SELL and specify the amount of tokens to sell.
+   - **REBALANCE Recommendation:**
+     - if you see more opportunities to buy other tokens, recommend REBALANCE.
    - Always apply prudent portfolio and risk management principles to maintain a balanced long-term strategy.
 
 3. **Output Format:**
@@ -81,7 +93,7 @@ Analyze the following token data and provide a trading recommendation under a lo
      {
        "tokenName": "<string>",
        "coinType": "<string>",  // For BUY recommendations, fromCoinType must be "0x2::sui::SUI"
-       "recommendation": "BUY" | "SELL" | "HOLD",
+       "recommendation": "BUY" | "SELL" | "HOLD" | "REBALANCE",
        "amount": <number>,  // For BUY: the SUI amount to be spent, always check BUY context to ensure the recommendation is feasible; for SELL: the token amount to sell; for HOLD: 0.
        "confidence": <number between 0 and 100>,
        "reasoning": "<string>",
@@ -140,7 +152,7 @@ export default {
       const analysisSchema = z.object({
         tokenName: z.string(),
         coinType: z.string(),
-        recommendation: z.enum(["BUY", "SELL", "HOLD"]),
+        recommendation: z.enum(["BUY", "SELL", "HOLD", "REBALANCE"]),
         amount: z.number(),
         confidence: z.number(),
         reasoning: z.string(),

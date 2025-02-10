@@ -170,7 +170,7 @@ export default {
             swapAmount.toString(),
             0
           );
-
+          console.log("Content:", result);
           if (result.success) {
             callback({
               text: `Successfully swapped ${swapContent.amount} ${swapContent.from_coin_type} to ${swapContent.destination_coin_type}, Transaction: ${service.getTransactionLink(

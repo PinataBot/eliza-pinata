@@ -168,10 +168,10 @@ export class SuiService extends Service {
       const mergeCoins = [];
 
       for (let i = 1; i < allCoins.data.length; i++) {
-        elizaLogger.info("Coin:", allCoins.data[i]);
+        //elizaLogger.info("Coin:", allCoins.data[i]);
         mergeCoins.push(allCoins.data[i].coinObjectId);
       }
-      elizaLogger.info("Merge coins:", mergeCoins);
+      //elizaLogger.info("Merge coins:", mergeCoins);
 
       routerTx.mergeCoins(allCoins.data[0].coinObjectId, mergeCoins);
       coin = routerTx.splitCoins(allCoins.data[0].coinObjectId, [amount]);

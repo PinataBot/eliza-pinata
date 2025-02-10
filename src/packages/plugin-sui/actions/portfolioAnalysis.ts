@@ -16,6 +16,9 @@ import { z } from "zod";
 import { SuiService } from "../services/sui.ts";
 import { fetchTokenData } from "../utils/fetchTokensData.ts";
 import { walletProvider } from "../providers/wallet.ts";
+import { AnalysisContent } from "./tokenAnalysis.ts";
+import { isAnalysisContent } from "./tokenAnalysis.ts";
+import { putBlobAndSave } from "../utils/walrus.ts";
 
 // Compose the prompt to analyze the token data with risk management and swap details
 const portfolioAnalysisPrompt = (walletInfo: any): string => {
@@ -36,6 +39,8 @@ You are provided with a current portfolio and a list of available actions. Your 
      - When considering a swap or buy action, assess the portfolio balance to determine the maximum available funds.
      - Apply risk management principles to decide the appropriate trading amount so as not to overexpose the portfolio to any single token.
      - Don't invest nearly the entire available SUI balance, reserving approximately 0.1 SUI for transaction fees and do not invest more than 10%-20% of the available SUI balance.
+     - One asset can't be more than 50% of the portfolio.
+     - If don't know what to do, recommend HOLD.
    - **Important Considerations:**
      - If you decide to **SELL** a token:
        - Ensure you do not sell all SUI coins; always retain approximately 0.1 SUI for transaction fees.
@@ -54,22 +59,21 @@ You are provided with a current portfolio and a list of available actions. Your 
        "coinType": "<string>",
        "recommendation": "BUY" | "SELL" | "HOLD" | "REBALANCE",
        "confidence": <number between 0 and 100>,
+       "amount": <number>,  // For BUY: the SUI amount to be spent, always check BUY context to ensure the recommendation is feasible; for SELL: the token amount to sell; for HOLD: 0.
        "reasoning": "<string>",
        "risks": ["<string>", "..."],
        "opportunities": ["<string>", "..."],
        "nextAction": {
-         "action": "swap" | "analyze token market",
-         "details": "<string or JSON object with swap details>"
+         "fromCoinType": "<string>",
+         "toCoinType": "<string>",
        }
      }
      \`\`\`
    - **Only one token should be recommended** in the output.
-   - The \`nextAction\` field should be set as follows:
-     - If **SELL** is recommended (triggering a swap), set \`"action": "swap"\` and provide the swap details (including \`fromTokenType\`, \`toTokenType\`, \`amount\`, and \`walletAddress\`) in the \`details\` field.
-     - Otherwise (if the recommendation is HOLD or REBALANCE), set \`"action": "analyze token market"\` and include any relevant details.
 
 4. **Context:**
    - Current portfolio data: \`${walletInfo}\`
+   - Get coin data from previous message: \`{{recentMessages}}\`  
    - Available actions: \`{{actions}}\`
 
 Based on your analysis of the portfolio and market conditions, provide the recommended trading action for one token along with the appropriate next call action in the JSON format as specified above.
@@ -121,24 +125,50 @@ export default {
         state,
         template: portfolioAnalysisPrompt(walletInfo),
       });
+
+      const analysisSchema = z.object({
+        tokenName: z.string(),
+        coinType: z.string(),
+        recommendation: z.enum(["BUY", "SELL", "HOLD", "REBALANCE"]),
+        amount: z.number(),
+        confidence: z.number(),
+        reasoning: z.string(),
+        risks: z.array(z.string()),
+        opportunities: z.array(z.string()),
+        nextAction: z.object({
+          fromCoinType: z.string(),
+          toCoinType: z.string(),
+        }),
+      });
+
       // Execute prompt to extract cointype
-      const content = await generateText({
+      const content = await generateObject({
         runtime,
         context: tokenInfoContext,
         modelClass: ModelClass.LARGE,
+        schema: analysisSchema,
       });
 
-      //console.log("Portfolio Content", content);
-
-      if (!content) {
-        throw new Error("Failed to generate analysis.");
+      const analysisContent = content.object as AnalysisContent;
+      // Validate transfer content
+      if (!isAnalysisContent(analysisContent)) {
+        console.error("Invalid content for ANALYZE_TRADE action.");
+        if (callback) {
+          callback({
+            text: "Unable to process transfer request. Invalid content provided.",
+            content: { error: "Invalid transfer content" },
+          });
+        }
+        return false;
       }
-
-      elizaLogger.debug("Raw analysis response:", content);
-
+      putBlobAndSave(runtime, JSON.stringify(analysisContent), "response").then(
+        () => {
+          console.log("Blob saved");
+        }
+      );
       if (callback) {
         await callback({
-          text: content,
+          text: JSON.stringify(analysisContent),
           type: "analysis",
         });
       }

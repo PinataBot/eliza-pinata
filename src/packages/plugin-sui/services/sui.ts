@@ -86,7 +86,7 @@ export class SuiService extends Service {
       Env.Mainnet,
     );
 
-    const amountBN = new BN(parseInt(amount.toString()));
+    const amountBN = new BN(amount.toString());
 
     // provider list : https://api-sui.cetus.zone/router_v2/status
     const routerRes = await client.findRouters({

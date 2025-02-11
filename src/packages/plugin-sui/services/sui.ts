@@ -75,7 +75,7 @@ export class SuiService extends Service {
     fromCoinType: string,
     toCoinType: string,
     amount: number | string,
-    out_min_amount: number
+    out_min_amount: number,
   ): Promise<SwapResult> {
     const fromMeta = await getTokenMetadata(fromCoinType);
     const toMeta = await getTokenMetadata(toCoinType);
@@ -83,10 +83,10 @@ export class SuiService extends Service {
       aggregatorURL,
       this.wallet.toSuiAddress(),
       this.suiClient,
-      Env.Mainnet
+      Env.Mainnet,
     );
 
-    const amountBN = new BN(amount.toString());
+    const amountBN = new BN(parseInt(amount.toString()));
 
     // provider list : https://api-sui.cetus.zone/router_v2/status
     const routerRes = await client.findRouters({
@@ -123,7 +123,7 @@ export class SuiService extends Service {
             from: fromMeta.coinType,
             target: toMeta.coinType,
             amount: amount,
-          })
+          }),
       );
       return {
         success: false,
@@ -202,7 +202,7 @@ export class SuiService extends Service {
     routerTx.setSender(this.wallet.toSuiAddress());
     const result = await client.signAndExecuteTransaction(
       routerTx,
-      this.wallet
+      this.wallet,
     );
 
     if (result.effects.status.status === "failure") {

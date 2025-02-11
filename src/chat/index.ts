@@ -71,9 +71,14 @@ export async function startChat(characters) {
         return;
       }
 
-      const resultData = JSON.parse(
-        aiAgentOutputData[1].text,
-      ) as AnalysisContent;
+      let resultData: AnalysisContent;
+      try {
+        resultData = JSON.parse(aiAgentOutputData[1].text) as AnalysisContent;
+      } catch (error) {
+        console.error("Error parsing agent output:", error);
+        return;
+      }
+
       const firstAction = aiAgentOutputData[0]?.action;
 
       // 2. Handle different actions from the AI agent
@@ -138,9 +143,15 @@ export async function startChat(characters) {
       if (!aiAgentOutputDataPortfolio || aiAgentOutputDataPortfolio.length <= 1)
         return;
 
-      const resultPortfolio = JSON.parse(
-        aiAgentOutputDataPortfolio[1].text,
-      ) as AnalysisContent;
+      let resultPortfolio: AnalysisContent;
+      try {
+        resultPortfolio = JSON.parse(
+          aiAgentOutputDataPortfolio[1].text,
+        ) as AnalysisContent;
+      } catch (error) {
+        console.error("Error parsing agent output:", error);
+        return;
+      }
       const portfolioAction = aiAgentOutputDataPortfolio[0]?.action;
 
       // 2b. If we get a "PORTFOLIO_ANALYSIS" action and it's not "HOLD", then swap

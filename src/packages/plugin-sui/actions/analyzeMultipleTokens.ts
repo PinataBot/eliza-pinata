@@ -14,7 +14,7 @@ import {
 import { z } from "zod";
 import { fetchTokenData } from "../utils/fetchTokensData.ts";
 import { putBlob } from "../utils/walrus.ts";
-import { MessageActionType } from "../types";
+import { MessageActionType } from "../types/MessageActionType.ts";
 
 interface CoinTypeTypes extends Content {
   coinType: string;
@@ -41,7 +41,7 @@ const coinTypePrompt = `Get multiple tokens. Respond with a JSON markdown block 
 
 // Compose the prompt to analyze the token data
 const analysisPrompt = (
-  marketData: any,
+  marketData: any
 ) => `Analyze the following tokens data and provide a trading recommendation. Choose the best token to trade. ONLY ONE TOKEN YOU SHOULD RECOMMEND.
   Return the response as a JSON object with the following structure:
   {
@@ -64,11 +64,11 @@ export default {
   examples: [],
   validate: async (
     runtime: IAgentRuntime,
-    message: Memory,
+    message: Memory
   ): Promise<boolean> => {
     elizaLogger.info(
       "Validating ANALYZE_MULTIPLE_TOKENS for agent:",
-      message.agentId,
+      message.agentId
     );
     return true;
   },
@@ -137,7 +137,7 @@ export default {
         `Parsed recommendation for token ${
           coinTypeContent.coinType || "unknown"
         }:`,
-        tradeRecommendation,
+        tradeRecommendation
       );
 
       if (callback) {
@@ -149,7 +149,7 @@ export default {
 
       return true;
     } catch (error) {
-      elizaLogger.error(`${MessageActionType.ANALYZE_TRADE} handler error:`, {
+      elizaLogger.error(`${MessageActionType.TRENDING_TOKENS} handler error:`, {
         error: error instanceof Error ? error.message : "Unknown error",
         stack: error instanceof Error ? error.stack : undefined,
       });

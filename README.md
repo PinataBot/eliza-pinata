@@ -8,7 +8,7 @@ An **AI trading agent on Sui** combines on-chain and off-chain components to ope
 - [Frontend-GitHub-Code](https://github.com/PinataBot/eliza-pinata-frontend)
 - [Smart-Contract-GitHub-Code](https://github.com/PinataBot/eliza-pinata)
 - [Backend-GitHub-Code](https://github.com/PinataBot/eliza-pinata)
-- [NFT object of character (Suivision)](https://suivision.xyz/object/0x2c23a00b61d6465b671decf2ef469a87be4114984a423d32da76e836d0728054?tab=Fields)
+- [NFT object of character (Suivision)](https://suivision.xyz/object/0x8ac0beffccfa1ac522d30d3886e4bf3bdf419d33a6afd585badae967438e7fb3?tab=Fields)
 
 ## High-Level Architecture
 

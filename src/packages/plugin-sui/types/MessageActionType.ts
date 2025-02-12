@@ -1,11 +1,11 @@
 export enum MessageActionType {
-    ANALYZE_PORTFOLIO = "PORTFOLIO_ANALYSIS",
-    ANALYZE_TRADE = "ANALYZE_TRADE",
-    SWAP_TOKEN = "SWAP_TOKEN",
+  PORTFOLIO_ANALYSIS = "PORTFOLIO_ANALYSIS",
+  SWAP_TOKEN = "SWAP_TOKEN",
+  TRENDING_TOKENS = "TRENDING_TOKENS",
 }
 
 export enum MessageRecommendationAfterAnalysis {
-    BUY = "BUY",
-    SELL = "SELL",
-    HOLD = "HOLD"
+  BUY = "BUY",
+  SELL = "SELL",
+  HOLD = "HOLD",
 }

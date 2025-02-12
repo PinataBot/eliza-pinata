@@ -15,11 +15,11 @@ import {
 import { z } from "zod";
 import { fetchTokenData } from "../utils/fetchTokensData.ts";
 import { putBlob, putBlobAndSave } from "../utils/walrus.ts";
-import { SupabaseDatabaseAdapter } from "../../adapter-supabase/src";
+import { SupabaseDatabaseAdapter } from "../../adapter-supabase/src/index.ts";
 import { loadWhitelistTokens } from "../utils/loadWhitelistTokens.ts";
 import { walletProvider } from "../providers/wallet.ts";
 import { v4 as uuid } from "uuid";
-import { MessageActionType } from "../types";
+import { MessageActionType } from "../types/index.ts";
 
 interface CoinTypeTypes extends Content {
   coinType: any;
@@ -41,7 +41,7 @@ export interface AnalysisContent extends Content {
 }
 
 export function isAnalysisContent(
-  content: Content,
+  content: Content
 ): content is AnalysisContent {
   console.log("Content for analysis", content);
   return (
@@ -111,29 +111,28 @@ Analyze the following token data and provide a trading recommendation under a lo
 
 4. **Context:**
    - **Portfolio data:** ${portfolioData}
-   - **Tokens data:** ${marketData}
+   - **Trending tokens data:** ${marketData}
 
 Based on your analysis of the market and the given portfolio data, provide a trading recommendation that aligns with a long-term investment strategy. If a BUY decision is made, the recommended amount should utilize nearly all available SUI (after reserving ~0.1 SUI for transaction fees).
 `;
 
+const ActionName = MessageActionType.TRENDING_TOKENS;
+
 export default {
-  name: MessageActionType.ANALYZE_TRADE,
-  similes: ["ANALYZE", "ANALYZE_TOKEN", "TRADE", "ASSESS"],
-  description: "Analyze a token for trading opportunities",
+  name: ActionName,
+  similes: [],
+  description: "Analyze a trending token for trading opportunities",
   examples: [],
   validate: async (
     runtime: IAgentRuntime,
-    message: Memory,
+    message: Memory
   ): Promise<boolean> => {
-    elizaLogger.info(
-      `Validating ${MessageActionType.ANALYZE_TRADE} for agent:`,
-      message.agentId,
-    );
+    elizaLogger.info(`Validating ${ActionName} for agent:`, message.agentId);
     return true;
   },
   handler: async (runtime, message, state, params, callback) => {
     try {
-      elizaLogger.log(`Starting ${MessageActionType.ANALYZE_TRADE} handler...`);
+      elizaLogger.log(`Starting ${ActionName} handler...`);
       const walletInfo = await walletProvider.get(runtime, message, state);
       state.walletInfo = walletInfo;
       // Initialize or update state
@@ -180,9 +179,7 @@ export default {
       const analysisContent = analysisResult.object as AnalysisContent;
       // Validate transfer content
       if (!isAnalysisContent(analysisContent)) {
-        console.error(
-          `Invalid content for ${MessageActionType.ANALYZE_TRADE} action.`,
-        );
+        console.error(`Invalid content for ${ActionName} action.`);
         if (callback) {
           callback({
             text: "Unable to process transfer request. Invalid content provided.",
@@ -196,9 +193,9 @@ export default {
       await putBlobAndSave(
         runtime,
         message,
-        MessageActionType.ANALYZE_TRADE,
+        ActionName,
         JSON.stringify(analysisContent),
-        "response",
+        "response"
       ).then(() => {
         console.log("Blob saved");
       });
@@ -208,7 +205,7 @@ export default {
         `Parsed recommendation for token ${
           tradeRecommendation.coinType || "unknown"
         }:`,
-        tradeRecommendation,
+        tradeRecommendation
       );
 
       if (callback) {
@@ -220,7 +217,7 @@ export default {
 
       return true;
     } catch (error) {
-      elizaLogger.error(`${MessageActionType.ANALYZE_TRADE} handler error:`, {
+      elizaLogger.error(`${ActionName} handler error:`, {
         error: error instanceof Error ? error.message : "Unknown error",
         stack: error instanceof Error ? error.stack : undefined,
       });

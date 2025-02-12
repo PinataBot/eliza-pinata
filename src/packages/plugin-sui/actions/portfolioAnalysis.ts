@@ -17,11 +17,11 @@ import { z } from "zod";
 import { SuiService } from "../services/sui.ts";
 import { fetchTokenData } from "../utils/fetchTokensData.ts";
 import { walletProvider } from "../providers/wallet.ts";
-import { AnalysisContent } from "./tokenAnalysis.ts";
-import { isAnalysisContent } from "./tokenAnalysis.ts";
+import { AnalysisContent } from "./trendingTokens.ts";
+import { isAnalysisContent } from "./trendingTokens.ts";
 import { putBlobAndSave } from "../utils/walrus.ts";
 import { v4 as uuid } from "uuid";
-import { MessageActionType } from "../types";
+import { MessageActionType } from "../types/MessageActionType.ts";
 
 // Compose the prompt to analyze the token data with risk management and swap details
 const portfolioAnalysisPrompt = (walletInfo: any): string => {
@@ -77,24 +77,23 @@ You are provided with a current portfolio and a list of available actions. Your 
 4. **Context:**
    - Current portfolio data: \`${walletInfo}\`
    - Get coin data from previous message: \`{{recentMessages}}\`  
-   - Available actions: \`{{actions}}\`
 
 Based on your analysis of the portfolio and market conditions, provide the recommended trading action for one token along with the appropriate next call action in the JSON format as specified above.
 `;
 };
 
 export default {
-  name: MessageActionType.ANALYZE_PORTFOLIO,
-  similes: ["PORTFOLIO", "PORTFOLIO_ANALYZE", "PORTFOLIO_ASSESS"],
-  description: "Analyze your portfolio",
+  name: MessageActionType.PORTFOLIO_ANALYSIS,
+  similes: ["PORTFOLIO_ASSESS"],
+  description: "Analysis your portfolio",
   examples: [],
   validate: async (
     runtime: IAgentRuntime,
-    message: Memory,
+    message: Memory
   ): Promise<boolean> => {
     elizaLogger.info(
-      `Validating ${MessageActionType.ANALYZE_PORTFOLIO} for agent:`,
-      message.agentId,
+      `Validating ${MessageActionType.PORTFOLIO_ANALYSIS} for agent:`,
+      message.agentId
     );
     return true;
   },
@@ -103,11 +102,11 @@ export default {
     message: Memory,
     state: State,
     params: any,
-    callback?: HandlerCallback,
+    callback?: HandlerCallback
   ) => {
     try {
       elizaLogger.log(
-        `Starting ${MessageActionType.ANALYZE_PORTFOLIO} handler...`,
+        `Starting ${MessageActionType.PORTFOLIO_ANALYSIS} handler...`
       );
       const walletInfo = await walletProvider.get(runtime, message, state);
       state.walletInfo = walletInfo;
@@ -153,7 +152,7 @@ export default {
       // Validate transfer content
       if (!isAnalysisContent(analysisContent)) {
         console.error(
-          `Invalid content for ${MessageActionType.ANALYZE_TRADE} action.`,
+          `Invalid content for ${MessageActionType.PORTFOLIO_ANALYSIS} action.`
         );
         if (callback) {
           callback({
@@ -166,9 +165,9 @@ export default {
       await putBlobAndSave(
         runtime,
         message,
-        MessageActionType.ANALYZE_PORTFOLIO,
+        MessageActionType.PORTFOLIO_ANALYSIS,
         JSON.stringify(analysisContent),
-        "response",
+        "response"
       ).then(() => {
         console.log("Blob saved");
       });
@@ -182,11 +181,11 @@ export default {
       return true;
     } catch (error) {
       elizaLogger.error(
-        `${MessageActionType.ANALYZE_PORTFOLIO} handler error:`,
+        `${MessageActionType.PORTFOLIO_ANALYSIS} handler error:`,
         {
           error: error instanceof Error ? error.message : "Unknown error",
           stack: error instanceof Error ? error.stack : undefined,
-        },
+        }
       );
       return false;
     }

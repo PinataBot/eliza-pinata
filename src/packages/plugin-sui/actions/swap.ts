@@ -17,7 +17,7 @@ import { SuiService } from "../services/sui.ts";
 import { z } from "zod";
 import { walletProvider } from "../providers/wallet.ts";
 import { putBlobAndSave } from "../utils/walrus.ts";
-import {MessageActionType} from "../types";
+import { MessageActionType } from "../types/MessageActionType.ts";
 
 export interface SwapPayload extends Content {
   from_coin_type: string;
@@ -70,15 +70,12 @@ Respond with a JSON markdown block containing only the extracted values.`;
 
 export default {
   name: MessageActionType.SWAP_TOKEN,
-  similes: [
-    "SWAP_TOKENS",
-    "SWAP_SUI",
-    "SWAP",
-    "MAKE_SWAP",
-    "SWAP_FROM_ONE_COIN_TYPE_TO_ANOTHER",
-  ],
+  similes: ["MAKE_SWAP", "SWAP_FROM_ONE_COIN_TYPE_TO_ANOTHER"],
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    elizaLogger.info(`Validating ${MessageActionType.SWAP_TOKEN} from user:`, message.userId);
+    elizaLogger.info(
+      `Validating ${MessageActionType.SWAP_TOKEN} from user:`,
+      message.userId
+    );
     return true;
   },
   description: "Perform a token swap.",
@@ -87,7 +84,7 @@ export default {
     message: Memory,
     state: State,
     _options: { [key: string]: unknown },
-    callback?: HandlerCallback,
+    callback?: HandlerCallback
   ): Promise<boolean> => {
     elizaLogger.log(`Starting ${MessageActionType.SWAP_TOKEN} handler...`);
 
@@ -131,7 +128,9 @@ export default {
     if (service.getNetwork() == "mainnet") {
       // Validate transfer content
       if (!isSwapContent(swapContent)) {
-        console.error(`Invalid content for ${MessageActionType.SWAP_TOKEN} action.`);
+        console.error(
+          `Invalid content for ${MessageActionType.SWAP_TOKEN} action.`
+        );
         if (callback) {
           callback({
             text: "Unable to process swap request. Invalid content provided.",
@@ -142,13 +141,13 @@ export default {
       }
 
       const destinationToken = await service.getTokenMetadata(
-        swapContent.destination_coin_type,
+        swapContent.destination_coin_type
       );
 
       elizaLogger.log("Destination token:", destinationToken);
 
       const fromToken = await service.getTokenMetadata(
-        swapContent.from_coin_type,
+        swapContent.from_coin_type
       );
 
       elizaLogger.log("From token:", fromToken);
@@ -162,7 +161,7 @@ export default {
           elizaLogger.info("Swap amount:", swapAmount.toString());
           elizaLogger.info(
             "Destination token address:",
-            destinationToken.coinType,
+            destinationToken.coinType
           );
           elizaLogger.info("From token address:", fromToken.coinType);
 
@@ -170,14 +169,14 @@ export default {
             fromToken.coinType,
             destinationToken.coinType,
             swapAmount.toString(),
-            0,
+            0
           );
           await putBlobAndSave(
             runtime,
             message,
-              MessageActionType.SWAP_TOKEN,
+            MessageActionType.SWAP_TOKEN,
             JSON.stringify(swapContent),
-            "action",
+            "action"
           ).then(() => {
             console.log("Blob saved");
           });
@@ -185,7 +184,7 @@ export default {
           if (result.success) {
             callback({
               text: `Successfully swapped ${swapContent.amount} ${swapContent.from_coin_type} to ${swapContent.destination_coin_type}, Transaction: ${service.getTransactionLink(
-                result.tx,
+                result.tx
               )}`,
               content: swapContent,
             });
@@ -194,7 +193,7 @@ export default {
           elizaLogger.error("Error swapping token:", error);
           callback({
             text: `Failed to swap ${error}, swapContent : ${JSON.stringify(
-              swapContent,
+              swapContent
             )}`,
             content: { error: "Failed to swap token" },
           });

@@ -21,6 +21,7 @@ import { AnalysisContent } from "./tokenAnalysis.ts";
 import { isAnalysisContent } from "./tokenAnalysis.ts";
 import { putBlobAndSave } from "../utils/walrus.ts";
 import { v4 as uuid } from "uuid";
+import { MessageActionType } from "../types";
 
 // Compose the prompt to analyze the token data with risk management and swap details
 const portfolioAnalysisPrompt = (walletInfo: any): string => {
@@ -83,13 +84,8 @@ Based on your analysis of the portfolio and market conditions, provide the recom
 };
 
 export default {
-  name: "PORTFOLIO_ANALYSIS",
-  similes: [
-    "PORTFOLIO",
-    "PORTFOLIO_ANALYSIS",
-    "PORTFOLIO_ANALYZE",
-    "PORTFOLIO_ASSESS",
-  ],
+  name: MessageActionType.ANALYZE_PORTFOLIO,
+  similes: ["PORTFOLIO", "PORTFOLIO_ANALYZE", "PORTFOLIO_ASSESS"],
   description: "Analyze your portfolio",
   examples: [],
   validate: async (
@@ -97,7 +93,7 @@ export default {
     message: Memory,
   ): Promise<boolean> => {
     elizaLogger.info(
-      "Validating PORTFOLIO_ANALYSIS for agent:",
+      `Validating ${MessageActionType.ANALYZE_PORTFOLIO} for agent:`,
       message.agentId,
     );
     return true;
@@ -110,7 +106,9 @@ export default {
     callback?: HandlerCallback,
   ) => {
     try {
-      elizaLogger.log("Starting PORTFOLIO_ANALYSIS handler...");
+      elizaLogger.log(
+        `Starting ${MessageActionType.ANALYZE_PORTFOLIO} handler...`,
+      );
       const walletInfo = await walletProvider.get(runtime, message, state);
       state.walletInfo = walletInfo;
 
@@ -154,7 +152,9 @@ export default {
       const analysisContent = content.object as AnalysisContent;
       // Validate transfer content
       if (!isAnalysisContent(analysisContent)) {
-        console.error("Invalid content for ANALYZE_TRADE action.");
+        console.error(
+          `Invalid content for ${MessageActionType.ANALYZE_TRADE} action.`,
+        );
         if (callback) {
           callback({
             text: "Unable to process transfer request. Invalid content provided.",
@@ -166,7 +166,7 @@ export default {
       await putBlobAndSave(
         runtime,
         message,
-        "PORTFOLIO_ANALYSIS",
+        MessageActionType.ANALYZE_PORTFOLIO,
         JSON.stringify(analysisContent),
         "response",
       ).then(() => {
@@ -181,10 +181,13 @@ export default {
 
       return true;
     } catch (error) {
-      elizaLogger.error("PORTFOLIO_ANALYSIS handler error:", {
-        error: error instanceof Error ? error.message : "Unknown error",
-        stack: error instanceof Error ? error.stack : undefined,
-      });
+      elizaLogger.error(
+        `${MessageActionType.ANALYZE_PORTFOLIO} handler error:`,
+        {
+          error: error instanceof Error ? error.message : "Unknown error",
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+      );
       return false;
     }
   },

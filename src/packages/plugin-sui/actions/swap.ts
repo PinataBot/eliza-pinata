@@ -17,6 +17,7 @@ import { SuiService } from "../services/sui.ts";
 import { z } from "zod";
 import { walletProvider } from "../providers/wallet.ts";
 import { putBlobAndSave } from "../utils/walrus.ts";
+import {MessageActionType} from "../types";
 
 export interface SwapPayload extends Content {
   from_coin_type: string;
@@ -68,7 +69,7 @@ Given the recent messages, extract the following information about the requested
 Respond with a JSON markdown block containing only the extracted values.`;
 
 export default {
-  name: "SWAP_TOKEN",
+  name: MessageActionType.SWAP_TOKEN,
   similes: [
     "SWAP_TOKENS",
     "SWAP_SUI",
@@ -77,7 +78,7 @@ export default {
     "SWAP_FROM_ONE_COIN_TYPE_TO_ANOTHER",
   ],
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    elizaLogger.info("Validating SWAP_TOKEN from user:", message.userId);
+    elizaLogger.info(`Validating ${MessageActionType.SWAP_TOKEN} from user:`, message.userId);
     return true;
   },
   description: "Perform a token swap.",
@@ -88,7 +89,7 @@ export default {
     _options: { [key: string]: unknown },
     callback?: HandlerCallback,
   ): Promise<boolean> => {
-    elizaLogger.log("Starting SWAP_TOKEN handler...");
+    elizaLogger.log(`Starting ${MessageActionType.SWAP_TOKEN} handler...`);
 
     // const walletInfo = await walletProvider.get(runtime, message, state);
     // state.walletInfo = walletInfo;
@@ -130,7 +131,7 @@ export default {
     if (service.getNetwork() == "mainnet") {
       // Validate transfer content
       if (!isSwapContent(swapContent)) {
-        console.error("Invalid content for SWAP_TOKEN action.");
+        console.error(`Invalid content for ${MessageActionType.SWAP_TOKEN} action.`);
         if (callback) {
           callback({
             text: "Unable to process swap request. Invalid content provided.",
@@ -174,7 +175,7 @@ export default {
           await putBlobAndSave(
             runtime,
             message,
-            "SWAP_TOKEN",
+              MessageActionType.SWAP_TOKEN,
             JSON.stringify(swapContent),
             "action",
           ).then(() => {
@@ -229,7 +230,7 @@ export default {
         user: "{{user2}}",
         content: {
           text: "I'll help you swap 1 SUI to USDC now...",
-          action: "SWAP_TOKEN",
+          action: MessageActionType.SWAP_TOKEN,
         },
       },
       {
@@ -250,7 +251,7 @@ export default {
         user: "{{user2}}",
         content: {
           text: "I'll help you swap 1 Sui to Sudeng now...",
-          action: "SWAP_TOKEN",
+          action: MessageActionType.SWAP_TOKEN,
         },
       },
       {
@@ -271,7 +272,7 @@ export default {
         user: "{{user2}}",
         content: {
           text: "I'll help you swap 1 SUI to USDC now...",
-          action: "SWAP_TOKEN",
+          action: MessageActionType.SWAP_TOKEN,
         },
       },
       {

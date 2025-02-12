@@ -19,6 +19,7 @@ import { SupabaseDatabaseAdapter } from "../../adapter-supabase/src";
 import { loadWhitelistTokens } from "../utils/loadWhitelistTokens.ts";
 import { walletProvider } from "../providers/wallet.ts";
 import { v4 as uuid } from "uuid";
+import { MessageActionType } from "../types";
 
 interface CoinTypeTypes extends Content {
   coinType: any;
@@ -116,20 +117,23 @@ Based on your analysis of the market and the given portfolio data, provide a tra
 `;
 
 export default {
-  name: "ANALYZE_TRADE",
-  similes: ["ANALYZE", "ANALYZE_TOKEN", "TRADE", "ANALYZE_TRADE", "ASSESS"],
+  name: MessageActionType.ANALYZE_TRADE,
+  similes: ["ANALYZE", "ANALYZE_TOKEN", "TRADE", "ASSESS"],
   description: "Analyze a token for trading opportunities",
   examples: [],
   validate: async (
     runtime: IAgentRuntime,
     message: Memory,
   ): Promise<boolean> => {
-    elizaLogger.info("Validating ANALYZE_TRADE for agent:", message.agentId);
+    elizaLogger.info(
+      `Validating ${MessageActionType.ANALYZE_TRADE} for agent:`,
+      message.agentId,
+    );
     return true;
   },
   handler: async (runtime, message, state, params, callback) => {
     try {
-      elizaLogger.log("Starting ANALYZE_TRADE handler...");
+      elizaLogger.log(`Starting ${MessageActionType.ANALYZE_TRADE} handler...`);
       const walletInfo = await walletProvider.get(runtime, message, state);
       state.walletInfo = walletInfo;
       // Initialize or update state
@@ -176,7 +180,9 @@ export default {
       const analysisContent = analysisResult.object as AnalysisContent;
       // Validate transfer content
       if (!isAnalysisContent(analysisContent)) {
-        console.error("Invalid content for ANALYZE_TRADE action.");
+        console.error(
+          `Invalid content for ${MessageActionType.ANALYZE_TRADE} action.`,
+        );
         if (callback) {
           callback({
             text: "Unable to process transfer request. Invalid content provided.",
@@ -190,7 +196,7 @@ export default {
       await putBlobAndSave(
         runtime,
         message,
-        "ANALYZE_TRADE",
+        MessageActionType.ANALYZE_TRADE,
         JSON.stringify(analysisContent),
         "response",
       ).then(() => {
@@ -214,7 +220,7 @@ export default {
 
       return true;
     } catch (error) {
-      elizaLogger.error("ANALYZE_TRADE handler error:", {
+      elizaLogger.error(`${MessageActionType.ANALYZE_TRADE} handler error:`, {
         error: error instanceof Error ? error.message : "Unknown error",
         stack: error instanceof Error ? error.stack : undefined,
       });

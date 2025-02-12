@@ -6,6 +6,7 @@ import {
   IS_AUTOMATED,
   REPEAT_PROMT_EVERY_MIN,
 } from "../config.ts";
+import {MessageActionType, MessageRecommendationAfterAnalysis} from "../packages/plugin-sui/types";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -62,8 +63,9 @@ export async function startChat(characters) {
    */
   async function automatedChat(agentId: string) {
     try {
+
       // 1. First AI call: Analyze tokens
-      const promptCoinType = `Decide what action to call. You can call ANALYZE_TRADE or PORTFOLIO_ANALYSIS. Based on recent messages, choose the action to call.`;
+      const promptCoinType = `Decide what action to call. You can call ${MessageActionType.ANALYZE_TRADE} or ${MessageActionType.ANALYZE_PORTFOLIO}. Based on recent messages, choose the action to call.`;
       const aiAgentOutputData = await handleUserInput(promptCoinType, agentId);
 
       if (!aiAgentOutputData || aiAgentOutputData.length <= 1) {
@@ -85,14 +87,14 @@ export async function startChat(characters) {
       console.log("firstAction:", firstAction);
       console.log("resultData:", resultData);
       if (
-        firstAction === "ANALYZE_TRADE" &&
-        resultData.recommendation !== "HOLD"
+        firstAction === MessageActionType.ANALYZE_TRADE &&
+        resultData.recommendation !== MessageRecommendationAfterAnalysis.HOLD
       ) {
         console.log("Handling analyze trade");
         await handleAnalyzeTrade(resultData, agentId);
       } else if (
-        firstAction === "PORTFOLIO_ANALYSIS" &&
-        resultData.recommendation !== "HOLD"
+        firstAction === MessageActionType.ANALYZE_PORTFOLIO &&
+        resultData.recommendation !== MessageRecommendationAfterAnalysis.HOLD
       ) {
         console.log("Handling portfolio analysis");
         await handlePortfolioAnalysis(resultData, agentId);
@@ -156,8 +158,8 @@ export async function startChat(characters) {
 
       // 2b. If we get a "PORTFOLIO_ANALYSIS" action and it's not "HOLD", then swap
       if (
-        portfolioAction === "PORTFOLIO_ANALYSIS" &&
-        resultPortfolio.recommendation !== "HOLD"
+        portfolioAction === MessageActionType.ANALYZE_PORTFOLIO &&
+        resultPortfolio.recommendation !== MessageRecommendationAfterAnalysis.HOLD
       ) {
         const promptSwap = `make a swap of your portfolio from coinType: ${resultData.nextAction?.fromCoinType} to destination coinType: ${resultData.nextAction?.toCoinType}, amount to swap: ${resultData.amount}`;
         const aiAgentOutputDataSwap = await handleUserInput(

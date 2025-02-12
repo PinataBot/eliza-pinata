@@ -1,4 +1,5 @@
 import { Character, ModelProviderName } from "@elizaos/core";
+import { MessageActionType } from "./packages/plugin-sui/types";
 
 export const character: Character = {
   name: "PinataAI-Test",
@@ -41,7 +42,7 @@ Keep your tone concise, witty, and informative.`,
         user: "{{user1}}",
         content: {
           text: "Analyze tokens and provide info what to do with them",
-          action: "ANALYZE_TOKEN",
+          action: MessageActionType.ANALYZE_TRADE,
         },
       },
       {
@@ -56,7 +57,7 @@ Keep your tone concise, witty, and informative.`,
         user: "{{user1}}",
         content: {
           text: "Analyze tokens and provide info what to do with them",
-          action: "ANALYZE_TOKEN",
+          action: MessageActionType.ANALYZE_TRADE,
         },
       },
       {
@@ -71,7 +72,7 @@ Keep your tone concise, witty, and informative.`,
         user: "{{user1}}",
         content: {
           text: "What's your portfolio?",
-          action: "ANALYZE_PORTFOLIO",
+          action: MessageActionType.ANALYZE_PORTFOLIO,
         },
       },
       {
@@ -86,7 +87,7 @@ Keep your tone concise, witty, and informative.`,
         user: "{{user1}}",
         content: {
           text: "Swap fromCoinType:0x2::sui::SUI to toCoinType:0x5145494a5f5100e645e4b0aa950fa6b68f614e8c59e17bc5ded3495123a79178::ns::NS, amount: 1",
-          action: "SWAP_TOKEN",
+          action: MessageActionType.SWAP_TOKEN,
         },
       },
       {

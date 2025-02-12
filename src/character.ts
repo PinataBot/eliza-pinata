@@ -1,5 +1,5 @@
 import { Character, ModelProviderName } from "@elizaos/core";
-import { MessageActionType } from "./packages/plugin-sui/types";
+import { MessageActionType } from "./packages/plugin-sui/types/index.ts";
 
 export const character: Character = {
   name: "PinataAI-Test",

@@ -17,7 +17,7 @@ import { SuiService } from "../services/sui.ts";
 import { z } from "zod";
 import { walletProvider } from "../providers/wallet.ts";
 import { putBlobAndSave } from "../utils/walrus.ts";
-import {MessageActionType} from "../types";
+import {MessageActionType} from "../types/index.ts";
 
 export interface SwapPayload extends Content {
   from_coin_type: string;

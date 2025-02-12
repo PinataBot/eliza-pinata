@@ -19,7 +19,7 @@ import { SupabaseDatabaseAdapter } from "../../adapter-supabase/src";
 import { loadWhitelistTokens } from "../utils/loadWhitelistTokens.ts";
 import { walletProvider } from "../providers/wallet.ts";
 import { v4 as uuid } from "uuid";
-import { MessageActionType } from "../types";
+import { MessageActionType } from "../types/index.ts";
 
 interface CoinTypeTypes extends Content {
   coinType: any;

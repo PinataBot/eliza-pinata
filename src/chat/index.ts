@@ -6,7 +6,7 @@ import {
   IS_AUTOMATED,
   REPEAT_PROMT_EVERY_MIN,
 } from "../config.ts";
-import {MessageActionType, MessageRecommendationAfterAnalysis} from "../packages/plugin-sui/types";
+import {MessageActionType, MessageRecommendationAfterAnalysis} from "../packages/plugin-sui/types/index.ts";
 
 const rl = readline.createInterface({
   input: process.stdin,

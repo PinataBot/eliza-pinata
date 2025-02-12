@@ -21,7 +21,7 @@ import { AnalysisContent } from "./tokenAnalysis.ts";
 import { isAnalysisContent } from "./tokenAnalysis.ts";
 import { putBlobAndSave } from "../utils/walrus.ts";
 import { v4 as uuid } from "uuid";
-import { MessageActionType } from "../types";
+import { MessageActionType } from "../types/index.ts";
 
 // Compose the prompt to analyze the token data with risk management and swap details
 const portfolioAnalysisPrompt = (walletInfo: any): string => {

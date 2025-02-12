@@ -1,4 +1,8 @@
-import { SUI_DECIMALS, SUI_TYPE_ARG } from "@mysten/sui/utils";
+import {
+  normalizeStructTag,
+  SUI_DECIMALS,
+  SUI_TYPE_ARG,
+} from "@mysten/sui/utils";
 import { fetchTokenData } from "./utils/fetchTokensData.ts";
 import { FilteredCoinMetadata } from "./types/tokenMarketDataTypes.ts";
 import { loadWhitelistTokens } from "./utils/loadWhitelistTokens.ts";
@@ -30,10 +34,10 @@ export const getTokenMetadata = async (
   coinType: string,
 ): Promise<FilteredCoinMetadata> => {
   if (
-    coinType === "0x2::sui::SUI" ||
+    coinType === "SUI" ||
+    coinType === "sui" ||
     coinType === SUI_TYPE_ARG ||
-    coinType ===
-      "0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI"
+    coinType === normalizeStructTag(SUI_TYPE_ARG)
   ) {
     return getSuiMetadata();
   }

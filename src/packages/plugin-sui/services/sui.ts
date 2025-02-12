@@ -8,7 +8,7 @@ import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 import { parseAccount, SuiNetwork } from "../utils.ts";
 import { AggregatorClient, Env } from "@cetusprotocol/aggregator-sdk";
 import BN from "bn.js";
-import { getTokenMetadata, TokenMetadata } from "../tokens.ts";
+import { getTokenMetadata } from "../tokens.ts";
 import { Signer } from "@mysten/sui/cryptography";
 import {
   Transaction,
@@ -52,7 +52,7 @@ export class SuiService extends Service {
   }
 
   getAmount(amount: string | number, meta: FilteredCoinMetadata) {
-    return BigInt(Number(amount) * Math.pow(10, meta.decimals));
+    return new BN(Number(amount) * Math.pow(10, meta.decimals));
   }
 
   getNetwork() {

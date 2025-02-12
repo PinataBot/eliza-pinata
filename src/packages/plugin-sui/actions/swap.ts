@@ -156,10 +156,7 @@ export default {
       // runtime.processActions
       if (destinationToken && fromToken) {
         try {
-          const swapAmount = service.getAmount(
-            parseInt(swapContent.amount.toString()),
-            fromToken,
-          );
+          const swapAmount = service.getAmount(swapContent.amount, fromToken);
 
           elizaLogger.info("Swap amount:", swapAmount.toString());
           elizaLogger.info(
